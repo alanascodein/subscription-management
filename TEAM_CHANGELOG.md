@@ -77,8 +77,10 @@ Before making any code changes:
 ### Change Entry: Backend Bug Fixes, Quantization, Password Reset & Customer Registration
 - **Contributor / Author**: Antigravity (Backend Agent)
 - **Branch**: `backend`
-- **Date & Time**: 2026-10-31 15:05 IST
-- **Status**: Ready for staging and commit
+- **Commit Hash**: `8af52b55b9a718704250275817c91ad9b8b05691`
+- **Date & Time**: 2026-10-31 15:08 IST
+- **Status**: Committed on `backend` branch (Ready for push)
+
 - **Summary of Changes**:
   - **P0 Model Quantization**: Overrode `save()` in `Product`, `ProductVariant`, and `TaxRule` in `products/models.py` to ensure `quantize_money` runs on monetary/percentage fields even when `clean()` is bypassed (e.g. via `objects.create()`).
   - **P0 URL Routing Fixes**: Resolved routing in `proofbill/urls.py`, `products/urls.py`, and `subscriptions/urls.py` so `/plans/`, `/customers/`, and `/customers/<uuid>/` are direct top-level endpoints matching `CONTRACT.md` without duplicate mounts.
