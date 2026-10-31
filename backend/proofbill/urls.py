@@ -17,7 +17,9 @@ def root_redirect(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', root_redirect, name='root'),
+    path('api/', include('proofbill.api_urls')),
     path('accounts/', include('accounts.urls')),
+
     path('products/', include('products.urls')),
     path('plans/', plans_list_view, name='plans'),
     path('customers/', customers_list_view, name='customers'),

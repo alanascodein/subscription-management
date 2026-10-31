@@ -19,4 +19,7 @@
 | TASK-15 | Fix URL routing for plans and customers (`proofbill/urls.py`) | Backend | Completed | Established direct top-level routes for `/plans/` and `/customers/` without double mounts. |
 | TASK-16 | Password reset flow (`accounts`) | Integration / Backend | Completed | Wired up Django's built-in password reset views with console email backend, and templates adhering to graphite design. |
 | TASK-17 | Customer self-registration flow (`accounts`, `subscriptions`) | Integration / Backend | Completed | Built `CustomerRegistrationForm`, `register_view`, template, and automatic customer User creation on staff registration. |
+| TASK-18 | Django REST/JSON API Layer (`proofbill/api.py`, `proofbill/api_urls.py`) | Backend | Completed | Built comprehensive JSON API endpoints with CORS, session auth, dashboard metrics, subscription lifecycle, payments, and Proof Engine audit actions. |
+| TASK-19 | Minimalist Frontend SPA (`frontend/`) | Frontend / Impeccable | Completed | Built React + Vite SPA using graphite design system, tabular numbers, zero AI-slop, clean monochrome icons, and integrated interactive hackathon demo controls. |
+
 

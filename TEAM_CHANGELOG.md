@@ -102,8 +102,37 @@ Before making any code changes:
   - `python manage.py run_detection`: Confirmed audit detection with deduplicated alerts
   - `python manage.py leak_injection`: Verified synthetic fault generation and live Proof Engine detection
 
+### Change Entry: Impeccable Minimalist Frontend SPA & Complete Backend JSON API
+- **Contributor / Author**: Antigravity (Frontend & Integration Agent)
+- **Branch**: `backend`
+- **Date & Time**: 2026-10-31 15:28 IST
+- **Status**: Ready for staging and commit
+- **Summary of Changes**:
+  - **PRODUCT.md & DESIGN.md**: Initialized `PRODUCT.md` via `/impeccable init` capturing durable product truth, operating context, and core principles. Created `DESIGN.md` establishing the graphite design system (`#1E2124`, `#F3F4F4`, `#FFFFFF`, `#D9DBDD`, `#5B6168`, `#2E7D4F`, `#B7791F`, `#B3261E`).
+  - **Django JSON API (`proofbill/api.py`, `proofbill/api_urls.py`)**: Built REST endpoints for auth, dashboard metrics, subscriptions, customer directory, invoices, payments, catalogue, and Proof Engine audit actions. Added `corsheaders` support in `settings.py`.
+  - **Minimalist React + Vite Frontend (`frontend/`)**: Scaffolded modern SPA with zero AI slop, no blue/purple themes, no floating shadows or button animations, crisp 1px borders, and tabular numerals.
+  - **Views & Components Built**:
+    - `DashboardView`: Revenue at Risk headline, financial summary metrics, overdue invoices, and upcoming renewals.
+    - `AlertsView`: Proof Engine detection review, JSON evidence viewer, and one-click guarded fixes (`generate_missing_invoice`, `rebalance`).
+    - `SubscriptionsView`: Subscriptions table with cycle and plan metadata, lifecycle state machine transition modal, and immutable event history.
+    - `InvoicesView`: Line-item snapshots, partial payment recording dialog with atomic balance deduction, void dialog with mandatory reason, and print layout.
+    - `CustomersView`: Subscriber directory with active plan counts and customer creation.
+    - `CatalogueView`: Products, variants with price additions, recurring plans with grace days and lifecycle flags.
+    - `CustomerPortalView`: Subscriber self-service portal for active subscriptions, invoices, and renewal/cancel requests.
+    - `DemoBar`: Top interactive bar for switching between Admin, Staff, and Customer accounts, and triggering billing runs, detection, and leak injection on demand.
+  - **Mechanical Design Check**: Ran Impeccable detector; 0 antipatterns found (`[]`).
+  - **Build Verification**: `vite build` completed in 366ms with 0 errors. Backend test suite: 43/43 tests passing.
+- **Files Added / Modified**:
+  - `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`
+  - `backend/proofbill/settings.py`, `backend/proofbill/urls.py`, `backend/proofbill/api.py`, `backend/proofbill/api_urls.py`
+  - `backend/TASKS.md`
+  - `frontend/package.json`, `frontend/vite.config.js`, `frontend/index.html`
+  - `frontend/src/index.css`, `frontend/src/api.js`, `frontend/src/App.jsx`
+  - `frontend/src/components/Header.jsx`, `frontend/src/components/DemoBar.jsx`
+  - `frontend/src/views/DashboardView.jsx`, `frontend/src/views/AlertsView.jsx`, `frontend/src/views/SubscriptionsView.jsx`, `frontend/src/views/InvoicesView.jsx`, `frontend/src/views/CustomersView.jsx`, `frontend/src/views/CatalogueView.jsx`, `frontend/src/views/CustomerPortalView.jsx`, `frontend/src/views/AuthModal.jsx`
 
 ---
+
 
 ## Important Changes for Other Agents
 
