@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Portal - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Customer Billing Portal</h1>
+    <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Manage your subscriptions, view invoices, and track payment receipts.</p>
+</div>
+
+{% if customer %}
+<div class="surface" style="margin-bottom: 24px;">
+    <h3 style="margin-top: 0; font-size: 16px;">Active Subscriptions</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Subscription ID</th>
+                <th>Plan</th>
+                <th>Cycle</th>
+                <th>Next Billing Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in subscriptions %}
+            <tr>
+                <td><strong>SUB-{{ sub.id:04d }}</strong></td>
+                <td>{{ sub.plan.name }}</td>
+                <td>{{ sub.plan.get_cycle_display }}</td>
+                <td>{{ sub.next_billing_date }}</td>
+                <td><span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span></td>
+                <td>
+                    <div style="display: flex; gap: 6px;">
+                        {% if sub.status == 'active' %}
+                            <form method="post" action="{% url 'portal_sub_cancel' sub.uuid %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('Request cancellation of this subscription?')">Request cancel</button>
+                            </form>
+                        {% elif sub.status == 'closed' and sub.plan.renewal_allowed %}
+                            <form method="post" action="{% url 'portal_sub_renew' sub.uuid %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">Renew plan</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 16px;">You have no subscriptions.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="surface" style="margin-bottom: 24px;">
+    <h3 style="margin-top: 0; font-size: 16px;">Billing Invoices</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Period</th>
+                <th>Due Date</th>
+                <th style="text-align: right;">Total</th>
+                <th style="text-align: right;">Balance Due</th>
+                <th>Status</th>
+                <th>View</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td><strong>{{ inv.invoice_number }}</strong></td>
+                <td>{{ inv.period_start }} &rarr; {{ inv.period_end }}</td>
+                <td>{{ inv.due_date }}</td>
+                <td class="tabular-nums">Rs. {{ inv.total_amount }}</td>
+                <td class="tabular-nums" style="font-weight: 600; {% if inv.balance_due > 0 %}color: var(--color-danger);{% endif %}">Rs. {{ inv.balance_due }}</td>
+                <td><span class="badge badge-{{ inv.display_status|slugify }}">{{ inv.display_status }}</span></td>
+                <td><a href="{% url 'invoice_detail' inv.uuid %}" class="btn btn-sm btn-secondary">Invoice details</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No invoices issued.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="surface">
+    <h3 style="margin-top: 0; font-size: 16px;">Payment History</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Invoice</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th style="text-align: right;">Amount Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>{{ p.payment_date }}</td>
+                <td>{{ p.invoice.invoice_number }}</td>
+                <td>{{ p.get_payment_method_display }}</td>
+                <td><code>{{ p.reference|default:"-" }}</code></td>
+                <td class="tabular-nums" style="color: var(--color-success); font-weight: 600;">Rs. {{ p.amount }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 16px;">No payments recorded.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="surface">
+    <p style="color: var(--text-secondary);">No customer profile linked to this account.</p>
+</div>
+{% endif %}
+{% endblock %}

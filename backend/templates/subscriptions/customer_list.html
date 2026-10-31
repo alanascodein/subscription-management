@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Customers</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Manage subscribers and accounts.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Registered Customers</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in customers %}
+                <tr>
+                    <td><a href="{% url 'customer_detail' c.uuid %}" style="font-weight: 600;">{{ c.name }}</a></td>
+                    <td>{{ c.company_name|default:"-" }}</td>
+                    <td>{{ c.email }}</td>
+                    <td>{{ c.phone|default:"-" }}</td>
+                    <td><a href="{% url 'customer_detail' c.uuid %}" class="btn btn-sm btn-secondary">View</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">No customers registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Register New Customer</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Company Name</label>
+                {{ form.company_name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                {{ form.phone }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Billing Address</label>
+                {{ form.billing_address }}
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Create customer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}SUB-{{ subscription.id:04d }} - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    {% if user.role != 'customer' %}
+        <a href="{% url 'subscriptions' %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to subscriptions</a>
+    {% else %}
+        <a href="{% url 'portal_home' %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to portal</a>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <div class="surface">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">SUB-{{ subscription.id:04d }}</h1>
+                        <span class="badge badge-{{ subscription.status }}">{{ subscription.get_status_display }}</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">
+                        Customer: <a href="{% url 'customer_detail' subscription.customer.uuid %}"><strong>{{ subscription.customer.name }}</strong></a>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-secondary);">Plan Cycle</div>
+                    <div style="font-weight: 700; font-size: 16px;">{{ subscription.plan.name }} ({{ subscription.plan.get_cycle_display }})</div>
+                </div>
+            </div>
+
+            <!-- Schedule info -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div>
+                    <div class="metric-label">First Period Start</div>
+                    <div style="font-weight: 600;">{{ subscription.start_date }}</div>
+                </div>
+                <div>
+                    <div class="metric-label">Next Billing Date</div>
+                    <div style="font-weight: 600; color: var(--text-primary);">{{ subscription.next_billing_date }}</div>
+                </div>
+                <div>
+                    <div class="metric-label">End Date</div>
+                    <div style="font-weight: 600;">{{ subscription.end_date|default:"Open-ended" }}</div>
+                </div>
+            </div>
+
+            <!-- Items table -->
+            <h3 style="font-size: 16px; margin-bottom: 12px;">Subscription Items</h3>
+            <table class="data-table" style="margin-bottom: 24px;">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Variant</th>
+                        <th style="text-align: right;">Quantity</th>
+                        <th style="text-align: right;">Unit price</th>
+                        <th style="text-align: right;">Line subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in subscription.items.all %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ item.product.name }}</td>
+                        <td>{{ item.variant.name|default:"Base" }}</td>
+                        <td class="tabular-nums">{{ item.quantity }}</td>
+                        <td class="tabular-nums">Rs. {{ item.unit_price }}</td>
+                        <td class="tabular-nums" style="font-weight: 600;">Rs. {{ item.line_subtotal }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 16px;">No items attached.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Invoices table -->
+            <h3 style="font-size: 16px; margin-bottom: 12px;">Generated Invoices</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Period</th>
+                        <th>Due date</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="text-align: right;">Balance due</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr>
+                        <td><a href="{% url 'invoice_detail' inv.uuid %}" style="font-weight: 600;">{{ inv.invoice_number }}</a></td>
+                        <td>{{ inv.period_start }} &rarr; {{ inv.period_end }}</td>
+                        <td>{{ inv.due_date }}</td>
+                        <td class="tabular-nums">Rs. {{ inv.total_amount }}</td>
+                        <td class="tabular-nums" style="font-weight: 600; {% if inv.balance_due > 0 %}color: var(--color-danger);{% endif %}">Rs. {{ inv.balance_due }}</td>
+                        <td><span class="badge badge-{{ inv.display_status|slugify }}">{{ inv.display_status }}</span></td>
+                        <td><a href="{% url 'invoice_detail' inv.uuid %}" class="btn btn-sm btn-secondary">View</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No invoices generated yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Lifecycle & Actions Panel -->
+    <div>
+        {% if user.role != 'customer' %}
+        <div class="surface" style="margin-bottom: 24px;">
+            <h3 style="margin-top: 0; font-size: 16px;">Lifecycle Actions</h3>
+            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Guarded state transitions enforced by the lifecycle state machine.</p>
+
+            <form method="post" action="{% url 'subscription_transition' subscription.uuid %}">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% if subscription.status == 'draft' %}
+                        <button type="submit" name="action" value="send_quotation" class="btn btn-secondary">Send quotation</button>
+                        <button type="submit" name="action" value="confirm" class="btn btn-primary">Confirm subscription</button>
+                        <button type="submit" name="action" value="close" class="btn btn-danger" onclick="return confirm('Close subscription?')">Close draft</button>
+
+                    {% elif subscription.status == 'quotation' %}
+                        <button type="submit" name="action" value="confirm" class="btn btn-primary">Confirm quotation</button>
+                        <button type="submit" name="action" value="close" class="btn btn-danger" onclick="return confirm('Reject quotation?')">Reject quotation</button>
+
+                    {% elif subscription.status == 'confirmed' %}
+                        <button type="submit" name="action" value="activate" class="btn btn-primary">Activate subscription</button>
+                        <button type="submit" name="action" value="close" class="btn btn-danger" onclick="return confirm('Close subscription?')">Close</button>
+
+                    {% elif subscription.status == 'active' %}
+                        {% if subscription.plan.pause_allowed %}
+                            <button type="submit" name="action" value="pause" class="btn btn-secondary">Pause subscription</button>
+                        {% endif %}
+                        <button type="submit" name="action" value="close" class="btn btn-danger" onclick="return confirm('Close subscription?')">Terminate subscription</button>
+
+                    {% elif subscription.status == 'paused' %}
+                        <button type="submit" name="action" value="resume" class="btn btn-primary">Resume subscription</button>
+                        <button type="submit" name="action" value="close" class="btn btn-danger" onclick="return confirm('Close subscription?')">Terminate subscription</button>
+
+                    {% elif subscription.status == 'closed' %}
+                        {% if subscription.plan.renewal_allowed %}
+                            <button type="submit" name="action" value="renew" class="btn btn-primary">Renew subscription</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Audit Event History -->
+        <div class="surface">
+            <h3 style="margin-top: 0; font-size: 16px;">Event History (Audit Trail)</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px;">
+                {% for ev in events %}
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="font-weight: 600; color: var(--text-primary);">
+                        {{ ev.action|title }}: <code>{{ ev.from_status }}</code> &rarr; <code>{{ ev.to_status }}</code>
+                    </div>
+                    <div style="color: var(--text-secondary); margin-top: 2px;">
+                        By {{ ev.actor.email|default:"System" }} on {{ ev.timestamp|date:"Y-m-d H:i" }}
+                    </div>
+                    {% if ev.reason %}
+                        <div style="color: var(--text-secondary); font-style: italic; margin-top: 2px;">"{{ ev.reason }}"</div>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li style="color: var(--text-secondary); padding: 10px 0;">No events logged.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

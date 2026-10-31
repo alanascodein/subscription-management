@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Tax and Discount Rules - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Tax & Discount Rules</h1>
+    <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Configurable pricing adjustments applied to subscriptions and invoices.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- Tax Rules -->
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Tax Rules</h3>
+        <table class="data-table" style="margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th>Tax Rule</th>
+                    <th style="text-align: right;">Rate (%)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in taxes %}
+                <tr>
+                    <td><strong>{{ t.name }}</strong></td>
+                    <td class="tabular-nums" style="font-weight: 600;">{{ t.rate_percent }}%</td>
+                    <td>{% if t.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-closed">Inactive</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 12px;">No tax rules.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Add Tax Rule</h4>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Tax Name (e.g. GST 18%)</label>
+                {{ tax_form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rate Percent</label>
+                {{ tax_form.rate_percent }}
+            </div>
+            <button type="submit" name="create_tax" class="btn btn-secondary">Save tax rule</button>
+        </form>
+    </div>
+
+    <!-- Discounts -->
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Discounts</h3>
+        <table class="data-table" style="margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Times Used</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in discounts %}
+                <tr>
+                    <td><code>{{ d.code }}</code></td>
+                    <td>{{ d.name }}</td>
+                    <td class="tabular-nums" style="font-weight: 600;">{{ d.value }}{% if d.discount_type == 'percent' %}%{% else %} Rs{% endif %}</td>
+                    <td class="tabular-nums">{{ d.times_used }}{% if d.usage_limit %}/{{ d.usage_limit }}{% endif %}</td>
+                    <td>{% if d.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-closed">Inactive</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 12px;">No discounts configured.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Add Discount</h4>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Discount Code</label>
+                {{ discount_form.code }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Discount Name</label>
+                {{ discount_form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type</label>
+                {{ discount_form.discount_type }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Value</label>
+                {{ discount_form.value }}
+            </div>
+            <button type="submit" name="create_discount" class="btn btn-secondary">Save discount</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

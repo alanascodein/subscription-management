@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{% url 'invoices' %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to invoices</a>
+    <div style="display: flex; gap: 8px;">
+        <button onclick="window.print()" class="btn btn-secondary">Print invoice</button>
+        {% if user.role != 'customer' and invoice.balance_due > 0 and invoice.status != 'void' %}
+            <a href="{% url 'payment_record' invoice.uuid %}" class="btn btn-primary">Record payment</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="surface" style="padding: 32px;">
+    <!-- Invoice Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 24px; margin-bottom: 24px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 700;">{{ invoice.invoice_number }}</h1>
+                <span class="badge badge-{{ invoice.display_status|slugify }}">{{ invoice.display_status }}</span>
+            </div>
+            <div style="color: var(--text-secondary); font-size: 13px;">
+                Subscription: <a href="{% url 'subscription_detail' invoice.subscription.uuid %}">SUB-{{ invoice.subscription.id:04d }}</a> ({{ invoice.subscription.plan.name }})
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 12px; color: var(--text-secondary);">Balance Due</div>
+            <div class="tabular-nums" style="font-size: 28px; font-weight: 700; {% if invoice.balance_due > 0 %}color: var(--color-danger);{% else %}color: var(--color-success);{% endif %}">
+                Rs. {{ invoice.balance_due }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;">
+        <div>
+            <div class="metric-label">Billed To</div>
+            <div style="font-weight: 600;">{{ invoice.customer.name }}</div>
+            {% if invoice.customer.company_name %}<div style="color: var(--text-secondary); font-size: 12px;">{{ invoice.customer.company_name }}</div>{% endif %}
+            <div style="color: var(--text-secondary); font-size: 12px;">{{ invoice.customer.email }}</div>
+        </div>
+        <div>
+            <div class="metric-label">Billing Period</div>
+            <div style="font-weight: 600;">{{ invoice.period_start }} &rarr; {{ invoice.period_end }}</div>
+        </div>
+        <div>
+            <div class="metric-label">Issue Date</div>
+            <div style="font-weight: 600;">{{ invoice.issue_date }}</div>
+        </div>
+        <div>
+            <div class="metric-label">Due Date</div>
+            <div style="font-weight: 600;">{{ invoice.due_date }}</div>
+            {% if invoice.is_overdue %}<span class="badge badge-overdue" style="margin-top: 4px;">Overdue</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- Snapshotted Line Items -->
+    <h3 style="font-size: 16px; margin-bottom: 12px;">Line Item Breakdown (Snapshotted)</h3>
+    <table class="data-table" style="margin-bottom: 24px;">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="text-align: right;">Qty</th>
+                <th style="text-align: right;">Unit price</th>
+                <th style="text-align: right;">Subtotal</th>
+                <th style="text-align: right;">Discount</th>
+                <th style="text-align: right;">Tax</th>
+                <th style="text-align: right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>
+                    <strong>{{ item.product_name }}</strong>
+                    {% if item.variant_name %}<span style="color: var(--text-secondary);">({{ item.variant_name }})</span>{% endif %}
+                    {% if item.description %}<div style="font-size: 12px; color: var(--text-secondary);">{{ item.description }}</div>{% endif %}
+                </td>
+                <td class="tabular-nums">{{ item.quantity }}</td>
+                <td class="tabular-nums">Rs. {{ item.unit_price }}</td>
+                <td class="tabular-nums">Rs. {{ item.line_subtotal }}</td>
+                <td class="tabular-nums" style="color: var(--color-warning);">Rs. {{ item.discount_amount }}</td>
+                <td class="tabular-nums">Rs. {{ item.tax_amount }}</td>
+                <td class="tabular-nums" style="font-weight: 600;">Rs. {{ item.line_total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals Calculation Box -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
+        <div style="width: 320px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-secondary);">Gross Subtotal:</span>
+                <span class="tabular-nums">Rs. {{ invoice.subtotal }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-secondary);">Discount Applied:</span>
+                <span class="tabular-nums" style="color: var(--color-warning);">-Rs. {{ invoice.discount_amount }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-secondary);">Tax:</span>
+                <span class="tabular-nums">Rs. {{ invoice.tax_amount }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 2px solid var(--text-primary); font-weight: 700; font-size: 16px;">
+                <span>Total Amount:</span>
+                <span class="tabular-nums">Rs. {{ invoice.total_amount }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-color); color: var(--color-success); font-weight: 600;">
+                <span>Total Amount Paid:</span>
+                <span class="tabular-nums">-Rs. {{ invoice.amount_paid }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; font-weight: 700; font-size: 16px; {% if invoice.balance_due > 0 %}color: var(--color-danger);{% endif %}">
+                <span>Remaining Balance Due:</span>
+                <span class="tabular-nums">Rs. {{ invoice.balance_due }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments History -->
+    <h3 style="font-size: 16px; margin-bottom: 12px;">Recorded Payments</h3>
+    <table class="data-table" style="margin-bottom: 24px;">
+        <thead>
+            <tr>
+                <th>Payment ID</th>
+                <th>Date</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th style="text-align: right;">Amount</th>
+                <th>Recorded by</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>PAY-{{ p.id }}</td>
+                <td>{{ p.payment_date }}</td>
+                <td>{{ p.get_payment_method_display }}</td>
+                <td><code>{{ p.reference|default:"-" }}</code></td>
+                <td class="tabular-nums" style="color: var(--color-success); font-weight: 600;">Rs. {{ p.amount }}</td>
+                <td>{{ p.recorded_by.email|default:"System" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 16px;">No payments recorded for this invoice yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if user.role != 'customer' and invoice.status != 'void' %}
+    <!-- Void Guarded Form -->
+    <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+        <h4 style="margin: 0 0 8px 0; color: var(--color-danger); font-size: 14px;">Void Invoice Guard</h4>
+        <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">Voiding an invoice frees the billing period for regeneration. A mandatory reason is required. Invoices with recorded payments cannot be voided.</p>
+
+        {% if invoice.amount_paid == 0 %}
+            <form method="post" action="{% url 'invoice_void' invoice.uuid %}" style="display: flex; gap: 10px; max-width: 600px;">
+                {% csrf_token %}
+                <input type="text" name="reason" class="form-control" placeholder="Enter reason for voiding..." required>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to void this invoice? This frees the period.')">Void invoice</button>
+            </form>
+        {% else %}
+            <div style="font-size: 12px; color: var(--text-secondary);">Cannot void: This invoice has Rs. {{ invoice.amount_paid }} in recorded payments.</div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

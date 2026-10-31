@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Register Customer Account - ProofBill{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 40px auto;">
+    <div class="surface">
+        <h2 style="margin-top: 0; font-size: 20px;">Register Customer Account</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Create your customer account to manage subscriptions, view invoices, and track payments.</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label" for="id_name">Full name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_email">Email address *</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_company_name">Company name</label>
+                {{ form.company_name }}
+                {% if form.company_name.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.company_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_phone">Phone</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.phone.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_billing_address">Billing address</label>
+                {{ form.billing_address }}
+                {% if form.billing_address.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.billing_address.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_password">Password *</label>
+                {{ form.password }}
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Must be at least 9 characters with uppercase, lowercase, and a special character.</div>
+                {% if form.password.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_confirm_password">Confirm password *</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.confirm_password.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Create account</button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 13px;">
+            Already have an account? <a href="{% url 'login' %}">Sign in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

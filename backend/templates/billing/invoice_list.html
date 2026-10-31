@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Invoices - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Invoices</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Recurring billing outcomes with idempotent period guarantees.</p>
+    </div>
+    <form method="post" action="{% url 'trigger_billing' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Run recurring billing</button>
+    </form>
+</div>
+
+<div class="surface">
+    <!-- Filter bar -->
+    <div style="display: flex; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap;">
+        <a href="{% url 'invoices' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">All invoices</a>
+        <a href="{% url 'invoices' %}?status=confirmed" class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %}">Confirmed</a>
+        <a href="{% url 'invoices' %}?status=overdue" class="btn btn-sm {% if status_filter == 'overdue' %}btn-primary{% else %}btn-secondary{% endif %}">Overdue</a>
+        <a href="{% url 'invoices' %}?status=partially_paid" class="btn btn-sm {% if status_filter == 'partially_paid' %}btn-primary{% else %}btn-secondary{% endif %}">Partially paid</a>
+        <a href="{% url 'invoices' %}?status=paid" class="btn btn-sm {% if status_filter == 'paid' %}btn-primary{% else %}btn-secondary{% endif %}">Paid</a>
+        <a href="{% url 'invoices' %}?status=draft" class="btn btn-sm {% if status_filter == 'draft' %}btn-primary{% else %}btn-secondary{% endif %}">Draft</a>
+        <a href="{% url 'invoices' %}?status=void" class="btn btn-sm {% if status_filter == 'void' %}btn-primary{% else %}btn-secondary{% endif %}">Void</a>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Customer</th>
+                <th>Period</th>
+                <th>Due date</th>
+                <th style="text-align: right;">Total</th>
+                <th style="text-align: right;">Paid</th>
+                <th style="text-align: right;">Balance due</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td><a href="{% url 'invoice_detail' inv.uuid %}" style="font-weight: 600;">{{ inv.invoice_number }}</a></td>
+                <td>{{ inv.customer.name }}</td>
+                <td>{{ inv.period_start }} &rarr; {{ inv.period_end }}</td>
+                <td>{{ inv.due_date }}</td>
+                <td class="tabular-nums" style="font-weight: 600;">Rs. {{ inv.total_amount }}</td>
+                <td class="tabular-nums" style="color: var(--color-success);">Rs. {{ inv.amount_paid }}</td>
+                <td class="tabular-nums" style="font-weight: 600; {% if inv.balance_due > 0 %}color: var(--color-danger);{% endif %}">Rs. {{ inv.balance_due }}</td>
+                <td>
+                    <span class="badge badge-{{ inv.display_status|slugify }}">
+                        {{ inv.display_status }}
+                    </span>
+                </td>
+                <td>
+                    {% if inv.balance_due > 0 and inv.status != 'void' %}
+                        <a href="{% url 'payment_record' inv.uuid %}" class="btn btn-sm btn-primary">Pay</a>
+                    {% else %}
+                        <a href="{% url 'invoice_detail' inv.uuid %}" class="btn btn-sm btn-secondary">View</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 30px;">No invoices found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

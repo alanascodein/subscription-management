@@ -1,0 +1,304 @@
+/* ProofBill Design System */
+:root {
+    --bg-page: #F3F4F4;
+    --bg-surface: #FFFFFF;
+    --border-color: #D9DBDD;
+    --text-primary: #1E2124;
+    --text-secondary: #5B6168;
+    --color-success: #2E7D4F;
+    --color-warning: #B7791F;
+    --color-danger: #B3261E;
+    --color-muted: #8A8F95;
+    --font-stack: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-stack);
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Typography & tabular numbers for currency */
+.tabular-nums, .money, .currency {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+/* Nav & Layout */
+.app-header {
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+.brand-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    background: #E8EAED;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+.app-nav {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.app-nav a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.app-nav a:hover, .app-nav a.active {
+    color: var(--text-primary);
+}
+
+.app-container {
+    max-width: 1240px;
+    margin: 24px auto;
+    padding: 0 20px;
+}
+
+/* Cards & Surfaces */
+.surface {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 16px;
+}
+
+.metric-card.danger {
+    border-top: 3px solid var(--color-danger);
+}
+
+.metric-card.warning {
+    border-top: 3px solid var(--color-warning);
+}
+
+.metric-card.success {
+    border-top: 3px solid var(--color-success);
+}
+
+.metric-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: none;
+    margin-bottom: 6px;
+}
+
+.metric-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.metric-value.danger {
+    color: var(--color-danger);
+}
+
+/* Tables */
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+}
+
+table.data-table th, table.data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+table.data-table th {
+    background: #FAFAFA;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+table.data-table tr:hover {
+    background: #F9FAFB;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 3px;
+    text-transform: none;
+}
+
+.badge-paid, .badge-active, .badge-success, .badge-resolved {
+    background-color: #E6F4EA;
+    color: var(--color-success);
+    border: 1px solid #CEEAD6;
+}
+
+.badge-overdue, .badge-danger, .badge-high {
+    background-color: #FCE8E6;
+    color: var(--color-danger);
+    border: 1px solid #FAD2CF;
+}
+
+.badge-partially_paid, .badge-warning, .badge-medium, .badge-in_review {
+    background-color: #FEF7E0;
+    color: var(--color-warning);
+    border: 1px solid #FEEFC3;
+}
+
+.badge-draft, .badge-quotation, .badge-paused, .badge-closed, .badge-void, .badge-dismissed, .badge-low, .badge-new {
+    background-color: #F1F3F4;
+    color: var(--color-muted);
+    border: 1px solid #DADCE0;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    transition: none;
+}
+
+.btn:focus {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background: var(--text-primary);
+    color: #FFFFFF;
+    border-color: var(--text-primary);
+}
+
+.btn-primary:hover {
+    background: #33383F;
+}
+
+.btn-secondary:hover {
+    background: #E8EAED;
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    color: #FFFFFF;
+    border-color: var(--color-danger);
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.form-control, .form-select {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: #FFFFFF;
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 1px;
+}
+
+/* Flash Messages */
+.messages {
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: #E6F4EA;
+    color: var(--color-success);
+    border-color: #CEEAD6;
+}
+
+.alert-error, .alert-danger {
+    background-color: #FCE8E6;
+    color: var(--color-danger);
+    border-color: #FAD2CF;
+}
+
+.alert-warning {
+    background-color: #FEF7E0;
+    color: var(--color-warning);
+    border-color: #FEEFC3;
+}
+
+.alert-info {
+    background-color: #E8F0FE;
+    color: var(--text-primary);
+    border-color: #D2E3FC;
+}

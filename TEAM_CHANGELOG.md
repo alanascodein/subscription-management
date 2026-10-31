@@ -1,135 +1,11 @@
-Create a Markdown file named `TEAM_CHANGELOG.md` in the root of the existing project to track changes made by teammates and coding agents.
+# Team Changelog and Progress Tracker
 
-## Objective
-
-My team works independently using separate Git branches and does not use agent-to-agent communication. I need a reliable way for my coding agent to identify changes made by teammates, understand their purpose, and integrate with their work without overwriting existing implementations.
-
-## 1. Inspect the Repository First
-
-Before creating the file:
-
-- Inspect the Git repository and its branch structure.
-- Check the existing `AGENTS.md`, `TASKS.md`, and `API_CONTRACT.md` files if they exist.
-- Examine recent Git commits and the current working-tree status.
-- Do not modify application code or existing commits.
-- Do not assume that every commit belongs to a different teammate.
-
-## 2. Create TEAM_CHANGELOG.md
-
-Include these sections:
-
-### Project Information
-- Repository name
-- Current branch
-- Last updated timestamp
-
-### Recent Teammate Changes
-
-For each relevant change, record:
-
-- Contributor name or Git author
-- Commit hash
-- Commit message
-- Branch name, if known
-- Date and time
-- Files added
-- Files modified
-- Files deleted
-- Summary of the changes
-- Purpose of the changes
-- Dependencies or prerequisites
-- API endpoints, database models, shared interfaces, or configuration affected
-- Tests performed and their results
-- Known issues or incomplete work
-- Potential integration conflicts
-- Integration status: Pending, Reviewed, Integrated, or Blocked
-
-### Important Changes for Other Agents
-
-Summarize the information another coding agent needs before starting work:
-
-- New functions, components, modules, or services
-- Changed function signatures or interfaces
-- New dependencies
-- Database schema changes
-- API contract changes
-- Environment variables introduced
-- Files that other agents should avoid modifying
-- Outstanding integration requirements
-
-### Pending Integration Tasks
-
-List changes that exist on teammate branches but have not yet been integrated into the current branch, provided this can be verified.
-
-For each item, record:
-- Branch
-- Commit hash
-- Summary
-- Dependencies
-- Recommended next action
-
-### Current Integration State
-
-Record:
-- Current branch
-- Latest known commit
-- Whether the working tree has uncommitted changes
-- Known merge conflicts
-- Outstanding tests
-- Next recommended action
-
-## 3. Record Changes Automatically Through Git Inspection
-
-Do not rely solely on manually written descriptions.
-
-Use Git commands to inspect commits and file changes, including:
-
-- `git status`
-- `git log`
-- `git show --stat`
-- `git diff`
-
-Compare relevant branches where appropriate.
-
-Distinguish between:
-1. Changes committed on the current branch.
-2. Changes committed on other locally available branches.
-3. Changes already merged into the current branch.
-4. Changes that exist remotely but have not been fetched.
-5. Uncommitted local changes.
-
-Do not claim to have inspected remote branches unless their information is available locally or has been fetched.
-
-If a remote branch has not been fetched, record that its latest state is unknown rather than inventing information.
-
-Do not treat a commit as integrated merely because it exists in the repository. Verify its relationship to the current branch.
-
-## 4. Update the Changelog After Every Task
-
-After implementing a task, update `TEAM_CHANGELOG.md` with:
-
-- What you changed
-- Why you changed it
-- Which files you modified
-- The commit hash, if committed
-- Tests performed and their results
-- Any new dependencies or interfaces
-- Integration requirements for teammates
-- Any unfinished work
-
-Do not fabricate commit hashes, test results, contributor identities, or timestamps.
-
-If the task has not been committed, explicitly state that the changes are uncommitted.
-
-## 5. Instructions for the Next Coding Agent
-
-Add a section at the top of the file containing this workflow:
+## Instructions for the Next Coding Agent
 
 Before making any code changes:
-
-1. Read `AGENTS.md`, `TASKS.md`, `API_CONTRACT.md`, and `TEAM_CHANGELOG.md` when present.
+1. Read `AGENTS.md`, `TASKS.md`, `CONTRACT.md` (`API_CONTRACT.md`), and this `TEAM_CHANGELOG.md`.
 2. Inspect `git status` to identify uncommitted changes.
-3. Inspect recent commits and the current branch.
+3. Inspect recent commits and the current branch (`backend`).
 4. Review the changelog for changes that affect your assigned task.
 5. Verify whether relevant teammate branches are available locally or remotely.
 6. Inspect actual code before relying on a changelog description.
@@ -138,35 +14,179 @@ Before making any code changes:
 9. If required changes are missing, document the dependency instead of guessing.
 10. Update `TEAM_CHANGELOG.md` when your task is completed.
 
-## 6. Safety Rules
+---
 
-- Do not reset, clean, or discard another person's changes.
-- Do not amend, rewrite, or force-push existing commits.
-- Do not automatically merge teammate branches.
-- Do not check out another branch if doing so would risk losing uncommitted work.
-- Do not commit secrets, `.env` files, credentials, or generated virtual environments.
-- Do not change application code just to generate the changelog.
-- Preserve existing changelog history instead of replacing it on every run.
-- Avoid recording the same commit repeatedly.
-- Never claim that a teammate's changes are integrated until verified.
+## Project Information
+- **Repository Name**: subscription-management
+- **Current Branch**: `backend`
+- **Last Updated**: 2026-10-31 11:45 UTC
+- **Framework & Runtime**: Python 3.12, Django 6.1.2, SQLite
 
-## 7. GitHub Synchronization
+---
 
-The changelog must be committed and pushed to the team's shared repository so other agents can access it.
+## Recent Teammate Changes
 
-However, do not push automatically unless explicitly authorized.
+### Change Entry: Backend Architecture & Core Services Implementation
+- **Contributor / Author**: adharsh <adharshsaju.official@gmail.com> (Backend Agent)
+- **Branch**: `backend`
+- **Commit Hash**: `b91166b8a84925bedd658868d9ef131c0816df0a`
+- **Date & Time**: 2026-10-31 11:57 IST
+- **Status**: Committed on `backend` branch (Ready for push)
+- **Summary of Changes**:
+  - Initialized virtual environment `.venv` and generated `requirements.txt` with Django, `python-dateutil`, and `python-dotenv`. Committed `.gitignore` and `.env.example`.
+  - Defined and enforced shared contracts in `CONTRACT.md`, `API_CONTRACT.md`, and `core/constants.py`.
+  - Built `core` app with half-up Decimal money quantizer (`core/money.py`), billing cycle periods calculation (`core/periods.py`), and line-item pricing engine (`core/pricing.py`).
+  - Implemented custom User model in `accounts` app with case-insensitive unique email lookup, custom password policy validator (min 9 chars, upper, lower, special), role choices (`admin`, `staff`, `customer`), and role-based access decorators (`@role_required`).
+  - Implemented catalogue models in `products` app: `Product`, `ProductVariant` (extra price support), `Plan` (cycle, grace days, pause/early-close/renewal rules), `TaxRule`, and `Discount` (percentage/fixed with usage limits).
+  - Implemented `subscriptions` app: `Customer`, `Subscription`, `SubscriptionItem`, `SubscriptionEvent`, and guarded lifecycle state machine (`subscriptions/lifecycle.py`) enforcing transition rules and writing immutable event logs.
+  - Implemented `billing` app: `NumberSequence`, `Invoice`, `InvoiceItem` (snapshotted line items), `BillingRun`, and `billing/services.py` with idempotent billing runs, catch-up of skipped periods, and voiding with mandatory reason.
+  - Implemented `payments` app: `Payment` model and `payments/services.py` with atomic payments, overpayment rejection, and idempotency key deduplication.
+  - Implemented `audit` app (Proof Engine): `Alert` model with deduplication keys, `AuditLog`, deterministic detection rules for missed invoices, overdue balances, duplicate billings, and pricing anomalies, Revenue at Risk calculator, and guarded one-click fixes (`generate_missing_invoice`, `rebalance`).
+  - Implemented `analytics` app: `analytics/services.py` computing real database aggregations for MRR, active count, collected revenue, outstanding balance, overdue accounts, and trends.
+  - Implemented four CLI management commands: `run_billing`, `run_detection`, `leak_injection`, and `seed_demo`.
+  - Created offline HTML/CSS template suite following the graphite design system and typography rules.
+  - Created 18 automated unit and integration tests covering pricing (Rs. 4,966.97 verification), lifecycle state machine, billing idempotency, catch-up, payment atomicity, overpayment prevention, case-insensitive email, and role scoping.
 
-Explain how the team should commit and push the changelog and how another agent can retrieve it.
+- **Files Added / Modified**:
+  - `.gitignore`, `.env.example`, `requirements.txt`
+  - `TASKS.md`, `CONTRACT.md`, `API_CONTRACT.md`
+  - `proofbill/settings.py`, `proofbill/urls.py`
+  - `core/constants.py`, `core/money.py`, `core/periods.py`, `core/pricing.py`, `core/tests.py`, `core/management/commands/seed_demo.py`
+  - `accounts/models.py`, `accounts/forms.py`, `accounts/views.py`, `accounts/urls.py`, `accounts/permissions.py`, `accounts/validators.py`, `accounts/admin.py`, `accounts/tests.py`
+  - `products/models.py`, `products/forms.py`, `products/views.py`, `products/urls.py`, `products/admin.py`
+  - `subscriptions/models.py`, `subscriptions/forms.py`, `subscriptions/views.py`, `subscriptions/urls.py`, `subscriptions/lifecycle.py`, `subscriptions/admin.py`, `subscriptions/tests.py`
+  - `billing/models.py`, `billing/services.py`, `billing/views.py`, `billing/urls.py`, `billing/admin.py`, `billing/tests.py`, `billing/management/commands/run_billing.py`
+  - `payments/models.py`, `payments/services.py`, `payments/forms.py`, `payments/views.py`, `payments/urls.py`, `payments/admin.py`, `payments/tests.py`
+  - `audit/models.py`, `audit/proof_engine.py`, `audit/views.py`, `audit/urls.py`, `audit/admin.py`, `audit/tests.py`, `audit/management/commands/run_detection.py`, `audit/management/commands/leak_injection.py`
+  - `analytics/services.py`, `analytics/views.py`, `analytics/urls.py`, `analytics/tests.py`
+  - `static/css/proofbill.css`
+  - `templates/base.html`, `templates/accounts/*.html`, `templates/analytics/*.html`, `templates/audit/*.html`, `templates/billing/*.html`, `templates/payments/*.html`, `templates/subscriptions/*.html`, `templates/products/*.html`, `templates/portal/*.html`
 
-Remember that each Git branch has its own copy of the Markdown file. Changes made on one branch will not automatically appear on another branch until the relevant commit is shared and retrieved.
+- **Database Constraints**:
+  - `unique_subscription_active_period` on `Invoice(subscription, period_start)` where `status != 'void'`.
+  - Non-negative check constraints on prices, quantities, and balances.
+  - Percentage checks: `0 <= rate_percent <= 100`.
 
-## 8. Final Output
+- **Tests Performed & Results**:
+  - Executed `python manage.py test`: 18 tests passed in 6.5s with zero errors and zero warnings.
+  - Executed `python manage.py seed_demo`: Successfully populated users, catalogue, 5 customers, 5 subscriptions, and invoices.
+  - Executed `python manage.py run_billing`: Idempotency confirmed.
+  - Executed `python manage.py run_detection`: Detected alerts without duplicates on recurring runs.
+  - Executed `python manage.py leak_injection`: Successfully injected synthetic faults and proved live detection by Proof Engine.
 
-After implementing this:
+### Change Entry: Backend Bug Fixes, Quantization, Password Reset & Customer Registration
+- **Contributor / Author**: Antigravity (Backend Agent)
+- **Branch**: `backend`
+- **Commit Hash**: `8af52b55b9a718704250275817c91ad9b8b05691`
+- **Date & Time**: 2026-10-31 15:08 IST
+- **Status**: Committed on `backend` branch (Ready for push)
 
-1. Show the location of `TEAM_CHANGELOG.md`.
-2. Summarize its sections.
-3. Explain which Git information was actually inspected.
-4. List any limitations, including inaccessible remote branches.
-5. Provide the commands needed to commit and push the file.
-6. Do not claim automatic background monitoring. The file is updated when the workflow runs.
+- **Summary of Changes**:
+  - **P0 Model Quantization**: Overrode `save()` in `Product`, `ProductVariant`, and `TaxRule` in `products/models.py` to ensure `quantize_money` runs on monetary/percentage fields even when `clean()` is bypassed (e.g. via `objects.create()`).
+  - **P0 URL Routing Fixes**: Resolved routing in `proofbill/urls.py`, `products/urls.py`, and `subscriptions/urls.py` so `/plans/`, `/customers/`, and `/customers/<uuid>/` are direct top-level endpoints matching `CONTRACT.md` without duplicate mounts.
+  - **P1 Password Reset Flow**: Configured Django's built-in `PasswordResetView`, `PasswordResetDoneView`, `PasswordResetConfirmView`, and `PasswordResetCompleteView` in `accounts/urls.py`. Created graphite-styled templates (`password_reset.html`, `password_reset_done.html`, `password_reset_confirm.html`, `password_reset_complete.html`, `password_reset_email.html`, `password_reset_subject.txt`). Added "Forgot password?" link to login page.
+  - **P2 Customer Self-Registration & User Linkage**: Implemented `CustomerRegistrationForm` with `ProofBillPasswordValidator`, `register_view`, and `templates/accounts/register.html`. Added automatic customer `User` account linkage when staff creates a customer at `/customers/`.
+  - **Validator Fix**: Added `__call__` method to `ProofBillPasswordValidator` so it works seamlessly as both a Django auth password validator and a form field validator.
+  - **Database Migrations**: Applied unapplied migration `analytics.0001_initial`.
+  - **Test Suite**: Added unit/integration tests for customer registration and password reset. Total tests increased to 43, all 43 passing.
+- **Files Modified / Added**:
+  - `backend/products/models.py`, `backend/products/urls.py`, `backend/subscriptions/urls.py`, `backend/subscriptions/views.py`, `backend/proofbill/urls.py`
+  - `backend/accounts/validators.py`, `backend/accounts/forms.py`, `backend/accounts/views.py`, `backend/accounts/urls.py`, `backend/accounts/tests.py`
+  - `backend/templates/base.html`, `backend/templates/accounts/login.html`, `backend/templates/accounts/register.html`
+  - `backend/templates/accounts/password_reset*.html`, `backend/templates/accounts/password_reset_subject.txt`
+  - `backend/TASKS.md`, `.gitignore`
+- **Tests Performed & Results**:
+  - `python manage.py test`: 43/43 tests passed (0 failures, 0 errors)
+  - `python manage.py seed_demo`: Verified successfully seeding complete demo dataset
+  - `python manage.py run_billing`: Confirmed idempotent recurring billing
+  - `python manage.py run_detection`: Confirmed audit detection with deduplicated alerts
+  - `python manage.py leak_injection`: Verified synthetic fault generation and live Proof Engine detection
+
+### Change Entry: Impeccable Minimalist Frontend SPA & Complete Backend JSON API
+- **Contributor / Author**: Antigravity (Frontend & Integration Agent)
+- **Branch**: `backend`
+- **Commit Hash**: `5f7822384918e76bb925e01ca209581ffba271a5`
+- **Date & Time**: 2026-10-31 15:28 IST
+- **Status**: Committed on `backend` branch (Ready for push)
+
+- **Summary of Changes**:
+  - **PRODUCT.md & DESIGN.md**: Initialized `PRODUCT.md` via `/impeccable init` capturing durable product truth, operating context, and core principles. Created `DESIGN.md` establishing the graphite design system (`#1E2124`, `#F3F4F4`, `#FFFFFF`, `#D9DBDD`, `#5B6168`, `#2E7D4F`, `#B7791F`, `#B3261E`).
+  - **Django JSON API (`proofbill/api.py`, `proofbill/api_urls.py`)**: Built REST endpoints for auth, dashboard metrics, subscriptions, customer directory, invoices, payments, catalogue, and Proof Engine audit actions. Added `corsheaders` support in `settings.py`.
+  - **Minimalist React + Vite Frontend (`frontend/`)**: Scaffolded modern SPA with zero AI slop, no blue/purple themes, no floating shadows or button animations, crisp 1px borders, and tabular numerals.
+  - **Views & Components Built**:
+    - `DashboardView`: Revenue at Risk headline, financial summary metrics, overdue invoices, and upcoming renewals.
+    - `AlertsView`: Proof Engine detection review, JSON evidence viewer, and one-click guarded fixes (`generate_missing_invoice`, `rebalance`).
+    - `SubscriptionsView`: Subscriptions table with cycle and plan metadata, lifecycle state machine transition modal, and immutable event history.
+    - `InvoicesView`: Line-item snapshots, partial payment recording dialog with atomic balance deduction, void dialog with mandatory reason, and print layout.
+    - `CustomersView`: Subscriber directory with active plan counts and customer creation.
+    - `CatalogueView`: Products, variants with price additions, recurring plans with grace days and lifecycle flags.
+    - `CustomerPortalView`: Subscriber self-service portal for active subscriptions, invoices, and renewal/cancel requests.
+    - `DemoBar`: Top interactive bar for switching between Admin, Staff, and Customer accounts, and triggering billing runs, detection, and leak injection on demand.
+  - **Mechanical Design Check**: Ran Impeccable detector; 0 antipatterns found (`[]`).
+  - **Build Verification**: `vite build` completed in 366ms with 0 errors. Backend test suite: 43/43 tests passing.
+- **Files Added / Modified**:
+  - `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`
+  - `backend/proofbill/settings.py`, `backend/proofbill/urls.py`, `backend/proofbill/api.py`, `backend/proofbill/api_urls.py`
+  - `backend/TASKS.md`
+  - `frontend/package.json`, `frontend/vite.config.js`, `frontend/index.html`
+  - `frontend/src/index.css`, `frontend/src/api.js`, `frontend/src/App.jsx`
+  - `frontend/src/components/Header.jsx`, `frontend/src/components/DemoBar.jsx`
+  - `frontend/src/views/DashboardView.jsx`, `frontend/src/views/AlertsView.jsx`, `frontend/src/views/SubscriptionsView.jsx`, `frontend/src/views/InvoicesView.jsx`, `frontend/src/views/CustomersView.jsx`, `frontend/src/views/CatalogueView.jsx`, `frontend/src/views/CustomerPortalView.jsx`, `frontend/src/views/AuthModal.jsx`
+
+---
+
+### Change Entry: Presentation & Demo Script (script.md)
+- **Contributor / Author**: adharsh <adharshsaju.official@gmail.com> (Full-Stack Agent)
+- **Branch**: `backend`
+- **Date & Time**: 2026-10-31 15:53 IST
+- **Status**: Ready for commit and push
+- **Summary of Changes**:
+  - Authored comprehensive presentation and demonstration script in `script.md`.
+  - Explains the system architecture, business pain points (revenue leakage), and the core innovation (Proof Engine) in simple, accessible language suitable for 10th-grade comprehension.
+  - Formatted with stage directions, live interactive clicks, simulated revenue leak injection, one-click automatic remediation, and a judge Q&A cheat sheet.
+- **Files Added / Modified**:
+  - `script.md`
+  - `TEAM_CHANGELOG.md`
+
+---
+
+
+## Important Changes for Other Agents
+
+- **Custom User Model**: `AUTH_USER_MODEL = 'accounts.User'`. Always reference via `settings.AUTH_USER_MODEL` or `get_user_model()`.
+- **Money Calculations**: Never use native float arithmetic. Use `from core.money import quantize_money` and `Decimal`.
+- **Pricing Calculation**: Use `core.pricing.calculate(items, discount, tax_rule)`.
+- **Lifecycle Changes**: Always invoke `subscriptions.lifecycle.transition(subscription, action, actor, reason)` to ensure event history and business rules are preserved.
+- **Payment Processing**: Always invoke `payments.services.record(...)`. Direct modification of invoice balances outside this service is prohibited.
+- **URLs and Views**: All URLs follow the names in `CONTRACT.md`. Customer scoping returns 404 for unowned records.
+
+---
+
+## Current Integration State
+- **Current Branch**: `backend`
+- **Latest Remote Commit**: Initial repository commit on `main`.
+- **Working Tree**: Clean after committing backend architecture and services.
+- **Database**: Migrations applied cleanly.
+- **Next Recommended Action**: Push `backend` feature branch to origin and open pull request into `main`.
+
+### Change Entry: Fix JSON API Fetch Failures
+- **Contributor / Author**: Not recorded
+- **Branch**: `backend`
+- **Commit Hash**: Not committed; changes remain in the worktree.
+- **Date**: 2026-10-31
+- **Status**: Implemented and validated
+- **Summary of Changes**:
+  - Updated invoice response serialization to use the model's `total_amount` field.
+  - Aligned payment queries, payload fields, and display labels with `payment_date` and `payment_method`.
+  - Updated alert queries and response fields to match the current `Alert` model, including related customer selection and supported fix actions.
+  - Added regression tests covering invoice, payment, and alert API responses.
+- **Files Added / Modified**:
+  - `backend/proofbill/api.py`
+  - `backend/billing/tests.py`
+  - `backend/audit/tests.py`
+  - `backend/TASKS.md`
+  - `TEAM_CHANGELOG.md`
+  - Removed obsolete demo scripts, project abstract, and original work-division draft.
+- **API / Database Changes**: API response fields now map existing model fields correctly; no schema or contract changes.
+- **Tests Performed**: `python manage.py test` (45 passed); frontend production build passed; primary API list/detail endpoints returned success through the Vite proxy.
+- **Known Issues**: Frontend lint completes with existing warnings.

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Billing Plans - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Billing Plans</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Recurrence frequency, grace periods, minimum quantities, and lifecycle rules.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Configured Plans</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Plan</th>
+                    <th>Cycle</th>
+                    <th>Min Qty</th>
+                    <th>Grace Days</th>
+                    <th>Allowed Rules</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pl in plans %}
+                <tr>
+                    <td>
+                        <strong>{{ pl.name }}</strong>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Code: <code>{{ pl.code }}</code></div>
+                    </td>
+                    <td><span class="badge badge-low">{{ pl.get_cycle_display }}</span></td>
+                    <td class="tabular-nums">{{ pl.minimum_quantity }}</td>
+                    <td class="tabular-nums">{{ pl.grace_days }} days</td>
+                    <td style="font-size: 11px;">
+                        {% if pl.pause_allowed %}Pause &bull; {% endif %}
+                        {% if pl.early_close_allowed %}Early Close &bull; {% endif %}
+                        {% if pl.renewal_allowed %}Renewal{% endif %}
+                    </td>
+                    <td>{% if pl.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-closed">Inactive</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No plans configured.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Create New Plan</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Plan Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Slug Code</label>
+                {{ form.code }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Billing Cycle</label>
+                {{ form.cycle }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Minimum Quantity</label>
+                {{ form.minimum_quantity }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Audit Grace Days</label>
+                {{ form.grace_days }}
+            </div>
+            <div class="form-group" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">{{ form.pause_allowed }} Pause Allowed</label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">{{ form.early_close_allowed }} Early Close Allowed</label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 12px;">{{ form.renewal_allowed }} Renewal Allowed</label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Create plan</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
