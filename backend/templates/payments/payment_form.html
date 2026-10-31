@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Record Payment for {{ invoice.invoice_number }} - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'invoice_detail' invoice.uuid %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to invoice {{ invoice.invoice_number }}</a>
+</div>
+
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="surface">
+        <h2 style="margin-top: 0; font-size: 20px;">Record Payment</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            Invoice: <strong>{{ invoice.invoice_number }}</strong> &bull; Customer: <strong>{{ invoice.customer.name }}</strong>
+        </p>
+
+        <div style="background: #F9FAFB; border: 1px solid var(--border-color); border-radius: 4px; padding: 16px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div>
+                <div class="metric-label">Total Amount</div>
+                <div class="tabular-nums" style="font-weight: 700;">Rs. {{ invoice.total_amount }}</div>
+            </div>
+            <div>
+                <div class="metric-label">Amount Paid</div>
+                <div class="tabular-nums" style="color: var(--color-success); font-weight: 700;">Rs. {{ invoice.amount_paid }}</div>
+            </div>
+            <div>
+                <div class="metric-label">Remaining Due</div>
+                <div class="tabular-nums" style="color: var(--color-danger); font-weight: 700;">Rs. {{ invoice.balance_due }}</div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.idempotency_key }}
+
+            <div class="form-group">
+                <label class="form-label">Payment Amount (Rs.)</label>
+                {{ form.amount }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Enter partial amount or full remaining balance (max Rs. {{ invoice.balance_due }}).</small>
+                {% if form.amount.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.amount.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                {{ form.payment_method }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Payment Date</label>
+                {{ form.payment_date }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Transaction Reference (Optional)</label>
+                {{ form.reference }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes (Optional)</label>
+                {{ form.note }}
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">Record payment</button>
+                <a href="{% url 'invoice_detail' invoice.uuid %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    {% if user.role != 'customer' %}
+        <a href="{% url 'customers' %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to customers</a>
+    {% endif %}
+</div>
+
+<div class="surface">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 700;">{{ customer.name }}</h1>
+            <p style="margin: 4px 0 0 0; color: var(--text-secondary);">{{ customer.company_name }} &bull; {{ customer.email }} &bull; {{ customer.phone }}</p>
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+            Member since {{ customer.created_at|date:"Y-m-d" }}
+        </div>
+    </div>
+
+    {% if customer.billing_address %}
+        <div style="background: #F9FAFB; padding: 12px; border-radius: 4px; font-size: 13px; margin-bottom: 24px;">
+            <strong>Billing Address:</strong><br>{{ customer.billing_address|linebreaksbr }}
+        </div>
+    {% endif %}
+
+    <h3 style="font-size: 16px; margin: 24px 0 12px 0;">Subscriptions</h3>
+    <table class="data-table" style="margin-bottom: 24px;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>Next Billing Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in subscriptions %}
+            <tr>
+                <td><a href="{% url 'subscription_detail' sub.uuid %}" style="font-weight: 600;">SUB-{{ sub.id:04d }}</a></td>
+                <td>{{ sub.plan.name }}</td>
+                <td><span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span></td>
+                <td>{{ sub.start_date }}</td>
+                <td>{{ sub.next_billing_date }}</td>
+                <td><a href="{% url 'subscription_detail' sub.uuid %}" class="btn btn-sm btn-secondary">View</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 16px;">No subscriptions found for this customer.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; margin: 24px 0 12px 0;">Invoices</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th style="text-align: right;">Total</th>
+                <th style="text-align: right;">Balance Due</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td><a href="{% url 'invoice_detail' inv.uuid %}" style="font-weight: 600;">{{ inv.invoice_number }}</a></td>
+                <td>{{ inv.issue_date }}</td>
+                <td>{{ inv.due_date }}</td>
+                <td class="tabular-nums">Rs. {{ inv.total_amount }}</td>
+                <td class="tabular-nums" style="font-weight: 600; {% if inv.balance_due > 0 %}color: var(--color-danger);{% endif %}">Rs. {{ inv.balance_due }}</td>
+                <td><span class="badge badge-{{ inv.display_status|slugify }}">{{ inv.display_status }}</span></td>
+                <td><a href="{% url 'invoice_detail' inv.uuid %}" class="btn btn-sm btn-secondary">View</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 16px;">No invoices found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

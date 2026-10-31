@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Proof Engine Alerts - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Proof Engine Audit Alerts</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Continuous reconciliation between expected billing and actual ledgers.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <form method="post" action="{% url 'trigger_detection' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Run audit detection</button>
+        </form>
+        <form method="post" action="{% url 'trigger_leak_injection' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Inject synthetic billing faults into database for demo?')">Leak injection</button>
+        </form>
+    </div>
+</div>
+
+<div class="summary-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+    <div class="metric-card danger">
+        <div class="metric-label">Current Revenue at Risk (Proof Engine Exposure)</div>
+        <div class="metric-value danger">Rs. {{ revenue_at_risk }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Potential financial loss prevented or flagged for human resolution.</small>
+    </div>
+</div>
+
+<div class="surface">
+    <!-- Filter bar -->
+    <div style="display: flex; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <a href="{% url 'alerts' %}" class="btn btn-sm {% if not status_filter and not priority_filter %}btn-primary{% else %}btn-secondary{% endif %}">All alerts</a>
+        <a href="{% url 'alerts' %}?status=new" class="btn btn-sm {% if status_filter == 'new' %}btn-primary{% else %}btn-secondary{% endif %}">New</a>
+        <a href="{% url 'alerts' %}?status=in_review" class="btn btn-sm {% if status_filter == 'in_review' %}btn-primary{% else %}btn-secondary{% endif %}">In review</a>
+        <a href="{% url 'alerts' %}?status=resolved" class="btn btn-sm {% if status_filter == 'resolved' %}btn-primary{% else %}btn-secondary{% endif %}">Resolved</a>
+        <a href="{% url 'alerts' %}?priority=high" class="btn btn-sm {% if priority_filter == 'high' %}btn-primary{% else %}btn-secondary{% endif %}">High priority</a>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Priority</th>
+                <th>Type</th>
+                <th>Alert Title</th>
+                <th style="text-align: right;">Financial exposure</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td><span class="badge badge-{{ alert.priority }}">{{ alert.get_priority_display }}</span></td>
+                <td><code>{{ alert.get_alert_type_display }}</code></td>
+                <td>
+                    <a href="{% url 'alert_detail' alert.id %}" style="font-weight: 600;">{{ alert.title }}</a>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">{{ alert.reason|truncatechars:100 }}</div>
+                </td>
+                <td class="tabular-nums" style="font-weight: 600; color: var(--color-danger);">Rs. {{ alert.amount }}</td>
+                <td><span class="badge badge-{{ alert.status }}">{{ alert.get_status_display }}</span></td>
+                <td>{{ alert.created_at|date:"Y-m-d H:i" }}</td>
+                <td><a href="{% url 'alert_detail' alert.id %}" class="btn btn-sm btn-secondary">Review & fix</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                    No alerts matching the selected filters.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

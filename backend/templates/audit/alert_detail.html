@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Alert #{{ alert.id }} - ProofBill{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'alerts' %}" style="font-size: 13px; color: var(--text-secondary);">&larr; Back to Proof Engine alerts</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <div class="surface">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <span class="badge badge-{{ alert.priority }}">{{ alert.get_priority_display }} Priority</span>
+                        <span class="badge badge-{{ alert.status }}">{{ alert.get_status_display }}</span>
+                        <span class="badge badge-low">{{ alert.get_alert_type_display }}</span>
+                    </div>
+                    <h1 style="margin: 0; font-size: 22px; font-weight: 700;">{{ alert.title }}</h1>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-secondary);">Exposure at Risk</div>
+                    <div class="tabular-nums" style="font-size: 24px; font-weight: 700; color: var(--color-danger);">Rs. {{ alert.amount }}</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 14px; margin: 0 0 6px 0; color: var(--text-secondary);">Detection Explanation</h3>
+                <div style="background: #F9FAFB; border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; font-size: 13px;">
+                    {{ alert.reason }}
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 14px; margin: 0 0 6px 0; color: var(--text-secondary);">Audit Evidence</h3>
+                <table class="data-table">
+                    <tbody>
+                        {% for key, val in alert.evidence.items %}
+                        <tr>
+                            <td style="font-weight: 600; width: 35%;">{{ key }}</td>
+                            <td><code>{{ val }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if alert.review_notes %}
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 14px; margin: 0 0 6px 0; color: var(--text-secondary);">Review Notes</h3>
+                <div style="background: #F9FAFB; border: 1px solid var(--border-color); padding: 12px; border-radius: 4px; font-size: 13px; white-space: pre-line;">
+                    {{ alert.review_notes }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Guarded Fix and Action Panel -->
+    <div>
+        <div class="surface">
+            <h3 style="margin-top: 0; font-size: 16px;">Guarded Remediation</h3>
+            <p style="color: var(--text-secondary); font-size: 13px;">All remediations run through identical service layer transactions and are recorded to the audit log.</p>
+
+            <form method="post" action="{% url 'alert_fix' alert.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Review / Action Notes</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Add justification or context..."></textarea>
+                </div>
+
+                {% if alert.status != 'resolved' and alert.status != 'dismissed' %}
+                    {% if alert.alert_type == 'missed_invoice' %}
+                        <button type="submit" name="action" value="apply_fix" class="btn btn-primary" style="width: 100%; margin-bottom: 8px;">
+                            Generate missing invoice
+                        </button>
+                    {% elif alert.alert_type == 'invoice_anomaly' %}
+                        <button type="submit" name="action" value="apply_fix" class="btn btn-primary" style="width: 100%; margin-bottom: 8px;">
+                            Rebalance invoice to line sum
+                        </button>
+                    {% else %}
+                        <button type="submit" name="action" value="apply_fix" class="btn btn-primary" style="width: 100%; margin-bottom: 8px;">
+                            Mark as resolved
+                        </button>
+                    {% endif %}
+
+                    <button type="submit" name="action" value="dismiss" class="btn btn-secondary" style="width: 100%;">
+                        Dismiss alert
+                    </button>
+                {% else %}
+                    <div class="alert alert-info" style="margin-bottom: 0;">
+                        This alert has been marked as <strong>{{ alert.get_status_display }}</strong>.
+                    </div>
+                {% endif %}
+            </form>
+
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary);">
+                <div><strong>Deduplication Key:</strong><br><code style="word-break: break-all;">{{ alert.deduplication_key }}</code></div>
+                {% if alert.reviewed_by %}
+                    <div style="margin-top: 8px;"><strong>Reviewed By:</strong> {{ alert.reviewed_by.email }} on {{ alert.reviewed_at|date:"Y-m-d H:i" }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

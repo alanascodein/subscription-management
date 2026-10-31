@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Add Staff Member - ProofBill{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 20px auto;">
+    <div class="surface">
+        <h2 style="margin-top: 0; font-size: 20px;">Add Staff Member</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Only administrators may provision staff or admin user accounts.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Email address</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px;">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">First name</label>
+                {{ form.first_name }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Last name</label>
+                {{ form.last_name }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                {{ form.role }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                {{ form.password }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Minimum 9 characters with uppercase, lowercase, and special characters.</small>
+                {% if form.password.errors %}
+                    <div style="color: var(--color-danger); font-size: 12px; margin-top: 4px;">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create staff member</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

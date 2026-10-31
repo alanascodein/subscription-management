@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Subscriptions</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Lifecycle and automated billing schedules.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div class="surface">
+        <!-- Filter bar -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap;">
+            <a href="{% url 'subscriptions' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+            <a href="{% url 'subscriptions' %}?status=active" class="btn btn-sm {% if status_filter == 'active' %}btn-primary{% else %}btn-secondary{% endif %}">Active</a>
+            <a href="{% url 'subscriptions' %}?status=paused" class="btn btn-sm {% if status_filter == 'paused' %}btn-primary{% else %}btn-secondary{% endif %}">Paused</a>
+            <a href="{% url 'subscriptions' %}?status=confirmed" class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %}">Confirmed</a>
+            <a href="{% url 'subscriptions' %}?status=quotation" class="btn btn-sm {% if status_filter == 'quotation' %}btn-primary{% else %}btn-secondary{% endif %}">Quotation</a>
+            <a href="{% url 'subscriptions' %}?status=draft" class="btn btn-sm {% if status_filter == 'draft' %}btn-primary{% else %}btn-secondary{% endif %}">Draft</a>
+            <a href="{% url 'subscriptions' %}?status=closed" class="btn btn-sm {% if status_filter == 'closed' %}btn-primary{% else %}btn-secondary{% endif %}">Closed</a>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Plan</th>
+                    <th>Next billing</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscriptions %}
+                <tr>
+                    <td><a href="{% url 'subscription_detail' sub.uuid %}" style="font-weight: 600;">SUB-{{ sub.id:04d }}</a></td>
+                    <td>{{ sub.customer.name }}</td>
+                    <td>{{ sub.plan.name }}</td>
+                    <td>{{ sub.next_billing_date }}</td>
+                    <td><span class="badge badge-{{ sub.status }}">{{ sub.get_status_display }}</span></td>
+                    <td><a href="{% url 'subscription_detail' sub.uuid %}" class="btn btn-sm btn-secondary">Manage</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No subscriptions found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="surface">
+        <h3 style="margin-top: 0; font-size: 16px;">Create Subscription</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Customer</label>
+                {{ form.customer }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Billing Plan</label>
+                {{ form.plan }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">First Billing Date</label>
+                {{ form.start_date }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">End Date (Optional)</label>
+                {{ form.end_date }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tax Rule</label>
+                {{ form.tax_rule }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Discount</label>
+                {{ form.discount }}
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+                <h4 style="font-size: 14px; margin: 0 0 8px 0;">Primary Item</h4>
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    {{ item_form.product }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Variant (Optional)</label>
+                    {{ item_form.variant }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    {{ item_form.quantity }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create subscription draft</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

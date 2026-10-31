@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ProofBill{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Financial Operations & Audit</h1>
+        <p style="margin: 4px 0 0 0; color: var(--text-secondary);">Real-time billing state reconciled against deterministic proof rules.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <form method="post" action="{% url 'trigger_billing' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary">Run billing</button>
+        </form>
+        <form method="post" action="{% url 'trigger_detection' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Run audit detection</button>
+        </form>
+        <form method="post" action="{% url 'trigger_leak_injection' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Inject synthetic billing faults into database for demo?')">Leak injection</button>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Metrics Cards -->
+<div class="summary-grid">
+    <div class="metric-card danger" title="Total potential financial discrepancy identified by Proof Engine across missed, duplicate, or mispriced records.">
+        <div class="metric-label">Revenue at risk (Potential)</div>
+        <div class="metric-value danger">Rs. {{ revenue_at_risk }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">De-duplicated across alerts</small>
+    </div>
+
+    <div class="metric-card danger" title="Confirmed balance overdue past invoice due dates.">
+        <div class="metric-label">Overdue balance ({{ overdue_count }} invoices)</div>
+        <div class="metric-value danger">Rs. {{ overdue_amount }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Immediate collection risk</small>
+    </div>
+
+    <div class="metric-card warning" title="Total confirmed balance awaiting payment.">
+        <div class="metric-label">Total outstanding balance</div>
+        <div class="metric-value">Rs. {{ outstanding }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Confirmed uncollected</small>
+    </div>
+
+    <div class="metric-card success" title="Total payment amounts recorded this calendar month.">
+        <div class="metric-label">Collected this month</div>
+        <div class="metric-value">Rs. {{ collected_month }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Rs. {{ total_collected }} all-time</small>
+    </div>
+
+    <div class="metric-card" title="Active recurring subscriptions normalized to a monthly rate.">
+        <div class="metric-label">Monthly recurring revenue (MRR)</div>
+        <div class="metric-value">Rs. {{ mrr }}</div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">{{ active_count }} active subscriptions</small>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Overdue Attention Table -->
+    <div class="surface" style="margin: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 16px;">Overdue Invoices Requiring Action</h3>
+            <a href="{% url 'invoices' %}?status=overdue" style="font-size: 12px; color: var(--text-secondary);">View all</a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>Due date</th>
+                    <th style="text-align: right;">Days overdue</th>
+                    <th style="text-align: right;">Balance due</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in overdue_rows %}
+                <tr>
+                    <td><a href="{% url 'invoice_detail' row.uuid %}" style="font-weight: 600;">{{ row.invoice_number }}</a></td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.due_date }}</td>
+                    <td class="tabular-nums" style="color: var(--color-danger); font-weight: 600;">{{ row.days_overdue }} days</td>
+                    <td class="tabular-nums" style="font-weight: 600;">Rs. {{ row.balance_due }}</td>
+                    <td><a href="{% url 'payment_record' row.uuid %}" class="btn btn-sm btn-primary">Record payment</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No overdue invoices. All accounts current.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Upcoming Renewals & Collections -->
+    <div class="surface" style="margin: 0;">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px;">Upcoming Expiries & Renewals</h3>
+        {% if upcoming_renewals %}
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for r in upcoming_renewals %}
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600;">{{ r.customer_name }}</div>
+                        <small style="color: var(--text-secondary);">{{ r.plan_name }} ({{ r.end_date }})</small>
+                    </div>
+                    <span class="badge badge-warning">{{ r.days_remaining }} days left</span>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: var(--text-secondary); font-size: 13px;">No subscriptions ending in next 30 days.</p>
+        {% endif %}
+
+        <h3 style="margin: 24px 0 12px 0; font-size: 16px;">Recent Payments</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Date</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in recent_payments %}
+                <tr>
+                    <td>{{ p.invoice_number }}</td>
+                    <td>{{ p.date }}</td>
+                    <td class="tabular-nums" style="color: var(--color-success); font-weight: 600;">Rs. {{ p.amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="color: var(--text-secondary); text-align: center;">No recent payments.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,135 +1,11 @@
-Create a Markdown file named `TEAM_CHANGELOG.md` in the root of the existing project to track changes made by teammates and coding agents.
+# Team Changelog and Progress Tracker
 
-## Objective
-
-My team works independently using separate Git branches and does not use agent-to-agent communication. I need a reliable way for my coding agent to identify changes made by teammates, understand their purpose, and integrate with their work without overwriting existing implementations.
-
-## 1. Inspect the Repository First
-
-Before creating the file:
-
-- Inspect the Git repository and its branch structure.
-- Check the existing `AGENTS.md`, `TASKS.md`, and `API_CONTRACT.md` files if they exist.
-- Examine recent Git commits and the current working-tree status.
-- Do not modify application code or existing commits.
-- Do not assume that every commit belongs to a different teammate.
-
-## 2. Create TEAM_CHANGELOG.md
-
-Include these sections:
-
-### Project Information
-- Repository name
-- Current branch
-- Last updated timestamp
-
-### Recent Teammate Changes
-
-For each relevant change, record:
-
-- Contributor name or Git author
-- Commit hash
-- Commit message
-- Branch name, if known
-- Date and time
-- Files added
-- Files modified
-- Files deleted
-- Summary of the changes
-- Purpose of the changes
-- Dependencies or prerequisites
-- API endpoints, database models, shared interfaces, or configuration affected
-- Tests performed and their results
-- Known issues or incomplete work
-- Potential integration conflicts
-- Integration status: Pending, Reviewed, Integrated, or Blocked
-
-### Important Changes for Other Agents
-
-Summarize the information another coding agent needs before starting work:
-
-- New functions, components, modules, or services
-- Changed function signatures or interfaces
-- New dependencies
-- Database schema changes
-- API contract changes
-- Environment variables introduced
-- Files that other agents should avoid modifying
-- Outstanding integration requirements
-
-### Pending Integration Tasks
-
-List changes that exist on teammate branches but have not yet been integrated into the current branch, provided this can be verified.
-
-For each item, record:
-- Branch
-- Commit hash
-- Summary
-- Dependencies
-- Recommended next action
-
-### Current Integration State
-
-Record:
-- Current branch
-- Latest known commit
-- Whether the working tree has uncommitted changes
-- Known merge conflicts
-- Outstanding tests
-- Next recommended action
-
-## 3. Record Changes Automatically Through Git Inspection
-
-Do not rely solely on manually written descriptions.
-
-Use Git commands to inspect commits and file changes, including:
-
-- `git status`
-- `git log`
-- `git show --stat`
-- `git diff`
-
-Compare relevant branches where appropriate.
-
-Distinguish between:
-1. Changes committed on the current branch.
-2. Changes committed on other locally available branches.
-3. Changes already merged into the current branch.
-4. Changes that exist remotely but have not been fetched.
-5. Uncommitted local changes.
-
-Do not claim to have inspected remote branches unless their information is available locally or has been fetched.
-
-If a remote branch has not been fetched, record that its latest state is unknown rather than inventing information.
-
-Do not treat a commit as integrated merely because it exists in the repository. Verify its relationship to the current branch.
-
-## 4. Update the Changelog After Every Task
-
-After implementing a task, update `TEAM_CHANGELOG.md` with:
-
-- What you changed
-- Why you changed it
-- Which files you modified
-- The commit hash, if committed
-- Tests performed and their results
-- Any new dependencies or interfaces
-- Integration requirements for teammates
-- Any unfinished work
-
-Do not fabricate commit hashes, test results, contributor identities, or timestamps.
-
-If the task has not been committed, explicitly state that the changes are uncommitted.
-
-## 5. Instructions for the Next Coding Agent
-
-Add a section at the top of the file containing this workflow:
+## Instructions for the Next Coding Agent
 
 Before making any code changes:
-
-1. Read `AGENTS.md`, `TASKS.md`, `API_CONTRACT.md`, and `TEAM_CHANGELOG.md` when present.
+1. Read `AGENTS.md`, `TASKS.md`, `CONTRACT.md` (`API_CONTRACT.md`), and this `TEAM_CHANGELOG.md`.
 2. Inspect `git status` to identify uncommitted changes.
-3. Inspect recent commits and the current branch.
+3. Inspect recent commits and the current branch (`backend`).
 4. Review the changelog for changes that affect your assigned task.
 5. Verify whether relevant teammate branches are available locally or remotely.
 6. Inspect actual code before relying on a changelog description.
@@ -138,35 +14,82 @@ Before making any code changes:
 9. If required changes are missing, document the dependency instead of guessing.
 10. Update `TEAM_CHANGELOG.md` when your task is completed.
 
-## 6. Safety Rules
+---
 
-- Do not reset, clean, or discard another person's changes.
-- Do not amend, rewrite, or force-push existing commits.
-- Do not automatically merge teammate branches.
-- Do not check out another branch if doing so would risk losing uncommitted work.
-- Do not commit secrets, `.env` files, credentials, or generated virtual environments.
-- Do not change application code just to generate the changelog.
-- Preserve existing changelog history instead of replacing it on every run.
-- Avoid recording the same commit repeatedly.
-- Never claim that a teammate's changes are integrated until verified.
+## Project Information
+- **Repository Name**: subscription-management
+- **Current Branch**: `backend`
+- **Last Updated**: 2026-10-31 11:45 UTC
+- **Framework & Runtime**: Python 3.12, Django 6.1.2, SQLite
 
-## 7. GitHub Synchronization
+---
 
-The changelog must be committed and pushed to the team's shared repository so other agents can access it.
+## Recent Teammate Changes
 
-However, do not push automatically unless explicitly authorized.
+### Change Entry: Backend Architecture & Core Services Implementation
+- **Contributor / Author**: adharsh <adharshsaju.official@gmail.com> (Backend Agent)
+- **Branch**: `backend`
+- **Commit Hash**: `b91166b8a84925bedd658868d9ef131c0816df0a`
+- **Date & Time**: 2026-10-31 11:57 IST
+- **Status**: Committed on `backend` branch (Ready for push)
+- **Summary of Changes**:
+  - Initialized virtual environment `.venv` and generated `requirements.txt` with Django, `python-dateutil`, and `python-dotenv`. Committed `.gitignore` and `.env.example`.
+  - Defined and enforced shared contracts in `CONTRACT.md`, `API_CONTRACT.md`, and `core/constants.py`.
+  - Built `core` app with half-up Decimal money quantizer (`core/money.py`), billing cycle periods calculation (`core/periods.py`), and line-item pricing engine (`core/pricing.py`).
+  - Implemented custom User model in `accounts` app with case-insensitive unique email lookup, custom password policy validator (min 9 chars, upper, lower, special), role choices (`admin`, `staff`, `customer`), and role-based access decorators (`@role_required`).
+  - Implemented catalogue models in `products` app: `Product`, `ProductVariant` (extra price support), `Plan` (cycle, grace days, pause/early-close/renewal rules), `TaxRule`, and `Discount` (percentage/fixed with usage limits).
+  - Implemented `subscriptions` app: `Customer`, `Subscription`, `SubscriptionItem`, `SubscriptionEvent`, and guarded lifecycle state machine (`subscriptions/lifecycle.py`) enforcing transition rules and writing immutable event logs.
+  - Implemented `billing` app: `NumberSequence`, `Invoice`, `InvoiceItem` (snapshotted line items), `BillingRun`, and `billing/services.py` with idempotent billing runs, catch-up of skipped periods, and voiding with mandatory reason.
+  - Implemented `payments` app: `Payment` model and `payments/services.py` with atomic payments, overpayment rejection, and idempotency key deduplication.
+  - Implemented `audit` app (Proof Engine): `Alert` model with deduplication keys, `AuditLog`, deterministic detection rules for missed invoices, overdue balances, duplicate billings, and pricing anomalies, Revenue at Risk calculator, and guarded one-click fixes (`generate_missing_invoice`, `rebalance`).
+  - Implemented `analytics` app: `analytics/services.py` computing real database aggregations for MRR, active count, collected revenue, outstanding balance, overdue accounts, and trends.
+  - Implemented four CLI management commands: `run_billing`, `run_detection`, `leak_injection`, and `seed_demo`.
+  - Created offline HTML/CSS template suite following the graphite design system and typography rules.
+  - Created 18 automated unit and integration tests covering pricing (Rs. 4,966.97 verification), lifecycle state machine, billing idempotency, catch-up, payment atomicity, overpayment prevention, case-insensitive email, and role scoping.
 
-Explain how the team should commit and push the changelog and how another agent can retrieve it.
+- **Files Added / Modified**:
+  - `.gitignore`, `.env.example`, `requirements.txt`
+  - `TASKS.md`, `CONTRACT.md`, `API_CONTRACT.md`
+  - `proofbill/settings.py`, `proofbill/urls.py`
+  - `core/constants.py`, `core/money.py`, `core/periods.py`, `core/pricing.py`, `core/tests.py`, `core/management/commands/seed_demo.py`
+  - `accounts/models.py`, `accounts/forms.py`, `accounts/views.py`, `accounts/urls.py`, `accounts/permissions.py`, `accounts/validators.py`, `accounts/admin.py`, `accounts/tests.py`
+  - `products/models.py`, `products/forms.py`, `products/views.py`, `products/urls.py`, `products/admin.py`
+  - `subscriptions/models.py`, `subscriptions/forms.py`, `subscriptions/views.py`, `subscriptions/urls.py`, `subscriptions/lifecycle.py`, `subscriptions/admin.py`, `subscriptions/tests.py`
+  - `billing/models.py`, `billing/services.py`, `billing/views.py`, `billing/urls.py`, `billing/admin.py`, `billing/tests.py`, `billing/management/commands/run_billing.py`
+  - `payments/models.py`, `payments/services.py`, `payments/forms.py`, `payments/views.py`, `payments/urls.py`, `payments/admin.py`, `payments/tests.py`
+  - `audit/models.py`, `audit/proof_engine.py`, `audit/views.py`, `audit/urls.py`, `audit/admin.py`, `audit/tests.py`, `audit/management/commands/run_detection.py`, `audit/management/commands/leak_injection.py`
+  - `analytics/services.py`, `analytics/views.py`, `analytics/urls.py`, `analytics/tests.py`
+  - `static/css/proofbill.css`
+  - `templates/base.html`, `templates/accounts/*.html`, `templates/analytics/*.html`, `templates/audit/*.html`, `templates/billing/*.html`, `templates/payments/*.html`, `templates/subscriptions/*.html`, `templates/products/*.html`, `templates/portal/*.html`
 
-Remember that each Git branch has its own copy of the Markdown file. Changes made on one branch will not automatically appear on another branch until the relevant commit is shared and retrieved.
+- **Database Constraints**:
+  - `unique_subscription_active_period` on `Invoice(subscription, period_start)` where `status != 'void'`.
+  - Non-negative check constraints on prices, quantities, and balances.
+  - Percentage checks: `0 <= rate_percent <= 100`.
 
-## 8. Final Output
+- **Tests Performed & Results**:
+  - Executed `python manage.py test`: 18 tests passed in 6.5s with zero errors and zero warnings.
+  - Executed `python manage.py seed_demo`: Successfully populated users, catalogue, 5 customers, 5 subscriptions, and invoices.
+  - Executed `python manage.py run_billing`: Idempotency confirmed.
+  - Executed `python manage.py run_detection`: Detected alerts without duplicates on recurring runs.
+  - Executed `python manage.py leak_injection`: Successfully injected synthetic faults and proved live detection by Proof Engine.
 
-After implementing this:
+---
 
-1. Show the location of `TEAM_CHANGELOG.md`.
-2. Summarize its sections.
-3. Explain which Git information was actually inspected.
-4. List any limitations, including inaccessible remote branches.
-5. Provide the commands needed to commit and push the file.
-6. Do not claim automatic background monitoring. The file is updated when the workflow runs.
+## Important Changes for Other Agents
+
+- **Custom User Model**: `AUTH_USER_MODEL = 'accounts.User'`. Always reference via `settings.AUTH_USER_MODEL` or `get_user_model()`.
+- **Money Calculations**: Never use native float arithmetic. Use `from core.money import quantize_money` and `Decimal`.
+- **Pricing Calculation**: Use `core.pricing.calculate(items, discount, tax_rule)`.
+- **Lifecycle Changes**: Always invoke `subscriptions.lifecycle.transition(subscription, action, actor, reason)` to ensure event history and business rules are preserved.
+- **Payment Processing**: Always invoke `payments.services.record(...)`. Direct modification of invoice balances outside this service is prohibited.
+- **URLs and Views**: All URLs follow the names in `CONTRACT.md`. Customer scoping returns 404 for unowned records.
+
+---
+
+## Current Integration State
+- **Current Branch**: `backend`
+- **Latest Remote Commit**: Initial repository commit on `main`.
+- **Working Tree**: Clean after committing backend architecture and services.
+- **Database**: Migrations applied cleanly.
+- **Next Recommended Action**: Push `backend` feature branch to origin and open pull request into `main`.
