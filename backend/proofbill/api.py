@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from core.constants import UserRole, SubscriptionStatus, InvoiceStatus, AlertStatus, BillingCycle
+from core.constants import UserRole, SubscriptionStatus, InvoiceStatus, AlertStatus, AlertType, BillingCycle
 from core.money import quantize_money
 from core import pricing, periods
 from accounts.models import User
@@ -48,6 +48,60 @@ def json_error(message, status=400, **kwargs):
     payload = {'status': 'error', 'message': str(message)}
     payload.update(kwargs)
     return JsonResponse(payload, status=status)
+
+
+def serialize_alert(alert):
+    customer = (
+        alert.subscription.customer if alert.subscription_id
+        else alert.invoice.customer if alert.invoice_id
+        else None
+    )
+    fix_actions = {
+        AlertType.MISSED_INVOICE: ('generate_missing_invoice', 'Generate missing invoice'),
+        AlertType.POSSIBLE_DUPLICATE: ('review', 'Mark for review'),
+        AlertType.INVOICE_ANOMALY: ('rebalance', 'Rebalance invoice'),
+    }
+    fix_action, fix_action_display = fix_actions.get(
+        alert.alert_type,
+        ('none', 'No automatic fix available'),
+    )
+
+    return {
+        'id': alert.id,
+        'rule_type': alert.alert_type,
+        'rule_type_display': alert.get_alert_type_display(),
+        'priority': alert.priority,
+        'status': alert.status,
+        'status_display': alert.get_status_display(),
+        'amount_at_risk': alert.amount,
+        'summary': alert.title,
+        'explanation': alert.reason,
+        'evidence': alert.evidence,
+        'customer': {
+            'uuid': str(customer.uuid),
+            'name': customer.name,
+            'email': customer.email,
+        } if customer else None,
+        'subscription_id': alert.subscription_id,
+        'subscription': {
+            'id': alert.subscription.id,
+            'uuid': str(alert.subscription.uuid),
+            'plan_name': alert.subscription.plan.name,
+        } if alert.subscription_id else None,
+        'invoice_number': alert.invoice.invoice_number if alert.invoice_id else None,
+        'invoice': {
+            'uuid': str(alert.invoice.uuid),
+            'invoice_number': alert.invoice.invoice_number,
+            'total': alert.invoice.total_amount,
+            'balance_due': alert.invoice.balance_due,
+        } if alert.invoice_id else None,
+        'fix_action': fix_action,
+        'fix_action_display': fix_action_display,
+        'review_notes': alert.review_notes,
+        'reviewed_by': alert.reviewed_by.email if alert.reviewed_by else None,
+        'reviewed_at': alert.reviewed_at,
+        'created_at': alert.created_at,
+    }
 
 
 def parse_json_body(request):
@@ -307,7 +361,7 @@ def subscription_detail(request, uuid):
             'invoice_number': inv.invoice_number,
             'status': inv.status,
             'status_display': inv.get_status_display(),
-            'total': inv.total,
+            'total': inv.total_amount,
             'amount_paid': inv.amount_paid,
             'balance_due': inv.balance_due,
             'issue_date': inv.issue_date,
@@ -481,7 +535,7 @@ def invoices_list(request):
             'subtotal': inv.subtotal,
             'tax_amount': inv.tax_amount,
             'discount_amount': inv.discount_amount,
-            'total': inv.total,
+            'total': inv.total_amount,
             'amount_paid': inv.amount_paid,
             'balance_due': inv.balance_due,
             'is_overdue': inv.is_overdue,
@@ -512,13 +566,13 @@ def invoice_detail(request, uuid):
         })
 
     payments_data = []
-    for p in inv.payments.all().order_by('-date'):
+    for p in inv.payments.all().order_by('-payment_date'):
         payments_data.append({
             'uuid': str(p.uuid),
             'amount': p.amount,
-            'date': p.date,
-            'method': p.method,
-            'method_display': p.get_method_display(),
+            'date': p.payment_date,
+            'method': p.payment_method,
+            'method_display': p.get_payment_method_display(),
             'reference': p.reference,
             'note': p.note,
         })
@@ -546,7 +600,7 @@ def invoice_detail(request, uuid):
         'subtotal': inv.subtotal,
         'tax_amount': inv.tax_amount,
         'discount_amount': inv.discount_amount,
-        'total': inv.total,
+        'total': inv.total_amount,
         'amount_paid': inv.amount_paid,
         'balance_due': inv.balance_due,
         'is_overdue': inv.is_overdue,
@@ -584,7 +638,7 @@ def invoice_record_payment(request, uuid):
             invoice=inv,
             amount=amount,
             method=method,
-            date=p_date,
+            payment_date=p_date,
             reference=reference,
             note=note,
             actor=actor
@@ -705,7 +759,7 @@ def customer_detail(request, uuid):
             'invoice_number': inv.invoice_number,
             'status': inv.status,
             'status_display': inv.get_status_display(),
-            'total': inv.total,
+            'total': inv.total_amount,
             'balance_due': inv.balance_due,
             'issue_date': inv.issue_date,
             'due_date': inv.due_date,
@@ -713,12 +767,12 @@ def customer_detail(request, uuid):
         })
 
     payments_data = []
-    for p in c.payments.all().order_by('-date'):
+    for p in c.payments.select_related('invoice').order_by('-payment_date'):
         payments_data.append({
             'uuid': str(p.uuid),
             'amount': p.amount,
-            'date': p.date,
-            'method': p.get_method_display(),
+            'date': p.payment_date,
+            'method': p.get_payment_method_display(),
             'invoice_number': p.invoice.invoice_number,
         })
 
@@ -888,80 +942,35 @@ def alerts_list(request):
     priority_filter = request.GET.get('priority')
     rule_type_filter = request.GET.get('type')
 
-    qs = Alert.objects.select_related('customer', 'subscription', 'invoice').order_by('-created_at')
+    qs = Alert.objects.select_related(
+        'subscription__customer',
+        'subscription__plan',
+        'invoice__customer',
+        'reviewed_by',
+    ).order_by('-created_at')
 
     if status_filter:
         qs = qs.filter(status=status_filter)
     if priority_filter:
         qs = qs.filter(priority=priority_filter)
     if rule_type_filter:
-        qs = qs.filter(rule_type=rule_type_filter)
+        qs = qs.filter(alert_type=rule_type_filter)
 
-    results = []
-    for a in qs:
-        results.append({
-            'id': a.id,
-            'rule_type': a.rule_type,
-            'rule_type_display': a.get_rule_type_display(),
-            'priority': a.priority,
-            'status': a.status,
-            'status_display': a.get_status_display(),
-            'amount_at_risk': a.amount_at_risk,
-            'summary': a.summary,
-            'explanation': a.explanation,
-            'evidence': a.evidence,
-            'customer': {
-                'uuid': str(a.customer.uuid) if a.customer else None,
-                'name': a.customer.name if a.customer else None,
-            } if a.customer else None,
-            'subscription_id': a.subscription_id,
-            'invoice_number': a.invoice.invoice_number if a.invoice else None,
-            'fix_action': a.fix_action,
-            'fix_action_display': a.get_fix_action_display(),
-            'review_notes': a.review_notes,
-            'created_at': a.created_at,
-        })
-    return json_ok(results)
+    return json_ok([serialize_alert(alert) for alert in qs])
 
 
 @require_http_methods(["GET"])
 def alert_detail(request, pk):
-    a = get_object_or_404(Alert.objects.select_related('customer', 'subscription', 'invoice', 'reviewed_by'), pk=pk)
-
-    return json_ok({
-        'id': a.id,
-        'rule_type': a.rule_type,
-        'rule_type_display': a.get_rule_type_display(),
-        'priority': a.priority,
-        'status': a.status,
-        'status_display': a.get_status_display(),
-        'amount_at_risk': a.amount_at_risk,
-        'summary': a.summary,
-        'explanation': a.explanation,
-        'evidence': a.evidence,
-        'customer': {
-            'uuid': str(a.customer.uuid) if a.customer else None,
-            'name': a.customer.name if a.customer else None,
-            'email': a.customer.email if a.customer else None,
-        } if a.customer else None,
-        'subscription': {
-            'id': a.subscription.id,
-            'uuid': str(a.subscription.uuid),
-            'plan_name': a.subscription.plan.name,
-        } if a.subscription else None,
-        'invoice': {
-            'uuid': str(a.invoice.uuid),
-            'invoice_number': a.invoice.invoice_number,
-            'total': a.invoice.total,
-            'balance_due': a.invoice.balance_due,
-        } if a.invoice else None,
-        'fix_action': a.fix_action,
-        'fix_action_display': a.get_fix_action_display(),
-        'review_notes': a.review_notes,
-        'reviewed_by': a.reviewed_by.email if a.reviewed_by else None,
-        'reviewed_at': a.reviewed_at,
-        'created_at': a.created_at,
-    })
+    alert = get_object_or_404(
+        Alert.objects.select_related(
+            'subscription__customer',
+            'subscription__plan',
+            'invoice__customer',
+            'reviewed_by',
+        ),
+        pk=pk,
+    )
+    return json_ok(serialize_alert(alert))
 
 
 @csrf_exempt
@@ -1091,7 +1100,7 @@ def portal_data(request):
             'invoice_number': inv.invoice_number,
             'status': inv.status,
             'status_display': inv.get_status_display(),
-            'total': inv.total,
+            'total': inv.total_amount,
             'amount_paid': inv.amount_paid,
             'balance_due': inv.balance_due,
             'issue_date': inv.issue_date,
@@ -1100,12 +1109,12 @@ def portal_data(request):
         })
 
     payments_data = []
-    for p in customer.payments.select_related('invoice').all().order_by('-date'):
+    for p in customer.payments.select_related('invoice').all().order_by('-payment_date'):
         payments_data.append({
             'uuid': str(p.uuid),
             'amount': p.amount,
-            'date': p.date,
-            'method': p.get_method_display(),
+            'date': p.payment_date,
+            'method': p.get_payment_method_display(),
             'invoice_number': p.invoice.invoice_number,
             'reference': p.reference,
         })

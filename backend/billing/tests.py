@@ -151,3 +151,48 @@ class BillingServicesTestCase(TestCase):
         # Now creating another invoice for the same period succeeds because void freed the period!
         inv2 = billing_services.create_invoice(sub, period_start=date(2026, 1, 1))
         self.assertEqual(inv2.status, InvoiceStatus.CONFIRMED)
+
+    def test_invoice_api_serializes_total_amount(self):
+        sub = Subscription.objects.create(
+            customer=self.customer,
+            plan=self.monthly_plan,
+            status=SubscriptionStatus.ACTIVE,
+            start_date=date(2026, 1, 1),
+            next_billing_date=date(2026, 1, 1),
+        )
+        SubscriptionItem.objects.create(
+            subscription=sub,
+            product=self.product,
+            quantity=1,
+            unit_price=Decimal('50.00'),
+        )
+        invoice = billing_services.create_invoice(sub, period_start=date(2026, 1, 1))
+
+        list_response = self.client.get('/api/invoices/')
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(list_response.json()['data'][0]['total'], 50.0)
+
+        detail_response = self.client.get(f'/api/invoices/{invoice.uuid}/')
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertEqual(detail_response.json()['data']['total'], 50.0)
+
+        payment_response = self.client.post(
+            f'/api/invoices/{invoice.uuid}/pay/',
+            data={
+                'amount': '20.00',
+                'method': 'bank_transfer',
+                'date': '2026-01-03',
+            },
+            content_type='application/json',
+        )
+        self.assertEqual(payment_response.status_code, 200)
+
+        detail_response = self.client.get(f'/api/invoices/{invoice.uuid}/')
+        self.assertEqual(detail_response.status_code, 200)
+        payment_data = detail_response.json()['data']['payments'][0]
+        self.assertEqual(payment_data['date'], '2026-01-03')
+        self.assertEqual(payment_data['method_display'], 'Bank Transfer')
+
+        customer_response = self.client.get(f'/api/customers/{self.customer.uuid}/')
+        self.assertEqual(customer_response.status_code, 200)
+        self.assertEqual(customer_response.json()['data']['payments'][0]['date'], '2026-01-03')

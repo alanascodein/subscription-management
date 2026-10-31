@@ -168,3 +168,25 @@ Before making any code changes:
 - **Working Tree**: Clean after committing backend architecture and services.
 - **Database**: Migrations applied cleanly.
 - **Next Recommended Action**: Push `backend` feature branch to origin and open pull request into `main`.
+
+### Change Entry: Fix JSON API Fetch Failures
+- **Contributor / Author**: Not recorded
+- **Branch**: `backend`
+- **Commit Hash**: Not committed; changes remain in the worktree.
+- **Date**: 2026-10-31
+- **Status**: Implemented and validated
+- **Summary of Changes**:
+  - Updated invoice response serialization to use the model's `total_amount` field.
+  - Aligned payment queries, payload fields, and display labels with `payment_date` and `payment_method`.
+  - Updated alert queries and response fields to match the current `Alert` model, including related customer selection and supported fix actions.
+  - Added regression tests covering invoice, payment, and alert API responses.
+- **Files Added / Modified**:
+  - `backend/proofbill/api.py`
+  - `backend/billing/tests.py`
+  - `backend/audit/tests.py`
+  - `backend/TASKS.md`
+  - `TEAM_CHANGELOG.md`
+  - Removed obsolete demo scripts, project abstract, and original work-division draft.
+- **API / Database Changes**: API response fields now map existing model fields correctly; no schema or contract changes.
+- **Tests Performed**: `python manage.py test` (45 passed); frontend production build passed; primary API list/detail endpoints returned success through the Vite proxy.
+- **Known Issues**: Frontend lint completes with existing warnings.

@@ -21,5 +21,5 @@
 | TASK-17 | Customer self-registration flow (`accounts`, `subscriptions`) | Integration / Backend | Completed | Built `CustomerRegistrationForm`, `register_view`, template, and automatic customer User creation on staff registration. |
 | TASK-18 | Django REST/JSON API Layer (`proofbill/api.py`, `proofbill/api_urls.py`) | Backend | Completed | Built comprehensive JSON API endpoints with CORS, session auth, dashboard metrics, subscription lifecycle, payments, and Proof Engine audit actions. |
 | TASK-19 | Minimalist Frontend SPA (`frontend/`) | Frontend / Impeccable | Completed | Built React + Vite SPA using graphite design system, tabular numbers, zero AI-slop, clean monochrome icons, and integrated interactive hackathon demo controls. |
-
+| TASK-20 | Fix JSON API model/serializer mismatches | Backend | Completed | Fixed invoice, payment, and alert serialization/query fields to match current models; added API regression tests. |
 

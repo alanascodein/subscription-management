@@ -94,3 +94,31 @@ class ProofEngineTestCase(TestCase):
         alert = Alert.objects.filter(alert_type=AlertType.OVERDUE_INVOICE, invoice=inv).first()
         self.assertIsNotNone(alert)
         self.assertEqual(alert.amount, Decimal('1000.00')) # balance due
+
+    def test_alert_api_serializes_and_filters_alerts(self):
+        sub = Subscription.objects.create(
+            customer=self.customer,
+            plan=self.plan,
+            status=SubscriptionStatus.ACTIVE,
+            start_date=date(2026, 5, 1),
+            next_billing_date=date(2026, 5, 1),
+        )
+        SubscriptionItem.objects.create(
+            subscription=sub,
+            product=self.product,
+            quantity=1,
+            unit_price=Decimal('1500.00'),
+        )
+        proof_engine.run(as_of=self.today)
+        alert = Alert.objects.get(alert_type=AlertType.MISSED_INVOICE, subscription=sub)
+
+        list_response = self.client.get('/api/alerts/?type=missed_invoice')
+        self.assertEqual(list_response.status_code, 200)
+        alert_data = list_response.json()['data'][0]
+        self.assertEqual(alert_data['rule_type'], AlertType.MISSED_INVOICE)
+        self.assertEqual(alert_data['summary'], alert.title)
+        self.assertEqual(alert_data['customer']['name'], self.customer.name)
+
+        detail_response = self.client.get(f'/api/alerts/{alert.id}/')
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertEqual(detail_response.json()['data']['id'], alert.id)
