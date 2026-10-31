@@ -135,6 +135,21 @@ Before making any code changes:
 
 ---
 
+### Change Entry: Presentation & Demo Script (script.md)
+- **Contributor / Author**: adharsh <adharshsaju.official@gmail.com> (Full-Stack Agent)
+- **Branch**: `backend`
+- **Date & Time**: 2026-10-31 15:53 IST
+- **Status**: Ready for commit and push
+- **Summary of Changes**:
+  - Authored comprehensive presentation and demonstration script in `script.md`.
+  - Explains the system architecture, business pain points (revenue leakage), and the core innovation (Proof Engine) in simple, accessible language suitable for 10th-grade comprehension.
+  - Formatted with stage directions, live interactive clicks, simulated revenue leak injection, one-click automatic remediation, and a judge Q&A cheat sheet.
+- **Files Added / Modified**:
+  - `script.md`
+  - `TEAM_CHANGELOG.md`
+
+---
+
 
 ## Important Changes for Other Agents
 
