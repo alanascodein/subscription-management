@@ -195,43 +195,9 @@ def auth_register(request):
 # Dashboard & Analytics Endpoints
 # --------------------------------------------------------------------------
 
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "HEAD"])
 def dashboard_summary(request):
     summary_data = analytics_services.summary()
-
-    # Serialize overdue rows & upcoming renewals
-    overdue_serialized = []
-    for inv in summary_data.get('overdue_rows', []):
-        overdue_serialized.append({
-            'uuid': str(inv.uuid),
-            'invoice_number': inv.invoice_number,
-            'customer_name': inv.customer.name,
-            'balance_due': inv.balance_due,
-            'due_date': inv.due_date,
-            'days_overdue': (timezone.localdate() - inv.due_date).days if inv.due_date else 0,
-        })
-
-    renewals_serialized = []
-    for sub in summary_data.get('upcoming_renewals', []):
-        renewals_serialized.append({
-            'uuid': str(sub.uuid),
-            'id': sub.id,
-            'customer_name': sub.customer.name,
-            'plan_name': sub.plan.name,
-            'next_billing_date': sub.next_billing_date,
-            'status': sub.status,
-            'status_display': sub.get_status_display(),
-        })
-
-    payments_serialized = []
-    for p in summary_data.get('recent_payments', []):
-        payments_serialized.append({
-            'amount': p.amount,
-            'date': p.date,
-            'method': p.get_method_display(),
-            'invoice_number': p.invoice.invoice_number,
-            'customer_name': p.customer.name,
-        })
 
     # High priority alerts count
     high_priority_count = Alert.objects.filter(priority='high', status__in=['new', 'in_review']).count()
@@ -245,12 +211,13 @@ def dashboard_summary(request):
         'active_count': summary_data.get('active_count', 0),
         'mrr': summary_data.get('mrr', Decimal('0.00')),
         'trend': summary_data.get('trend', []),
-        'overdue_rows': overdue_serialized,
-        'upcoming_renewals': renewals_serialized,
-        'recent_payments': payments_serialized,
+        'overdue_rows': summary_data.get('overdue_rows', []),
+        'upcoming_renewals': summary_data.get('upcoming_renewals', []),
+        'recent_payments': summary_data.get('recent_payments', []),
         'high_priority_alerts_count': high_priority_count,
         'total_open_alerts_count': Alert.objects.filter(status__in=['new', 'in_review']).count(),
     })
+
 
 
 # --------------------------------------------------------------------------
