@@ -2,7 +2,29 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import List, Optional, Any
 from core.money import quantize_money
-from core.constants import DiscountType
+from core.constants import BillingCycle, DiscountType
+
+
+def monthly_equivalent(cycle: str, amount: Decimal) -> Decimal:
+    """
+    Convert a billing cycle amount to its monthly equivalent.
+
+    Used for MRR (Monthly Recurring Revenue) calculations:
+    - MONTHLY: amount as-is
+    - YEARLY: amount / 12
+    - WEEKLY: amount * 52 / 12 (≈ amount * 4.33)
+    - DAILY: amount * 365 / 12 (≈ amount * 30.42)
+    """
+    if cycle == BillingCycle.MONTHLY:
+        return amount
+    elif cycle == BillingCycle.YEARLY:
+        return amount / Decimal('12')
+    elif cycle == BillingCycle.WEEKLY:
+        return amount * Decimal('52') / Decimal('12')
+    elif cycle == BillingCycle.DAILY:
+        return amount * Decimal('365') / Decimal('12')
+    else:
+        raise ValueError(f"Unsupported billing cycle: {cycle}")
 
 
 @dataclass

@@ -98,7 +98,7 @@ class PlanModelTestCase(TestCase):
         with self.assertRaises(ValidationError):
             plan.full_clean()
 
-    def test Availability_window(self):
+    def test_availability_window(self):
         plan = Plan.objects.create(
             name='Limited',
             code='limited',
