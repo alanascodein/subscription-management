@@ -74,6 +74,33 @@ Before making any code changes:
   - Executed `python manage.py run_detection`: Detected alerts without duplicates on recurring runs.
   - Executed `python manage.py leak_injection`: Successfully injected synthetic faults and proved live detection by Proof Engine.
 
+### Change Entry: Backend Bug Fixes, Quantization, Password Reset & Customer Registration
+- **Contributor / Author**: Antigravity (Backend Agent)
+- **Branch**: `backend`
+- **Date & Time**: 2026-10-31 15:05 IST
+- **Status**: Ready for staging and commit
+- **Summary of Changes**:
+  - **P0 Model Quantization**: Overrode `save()` in `Product`, `ProductVariant`, and `TaxRule` in `products/models.py` to ensure `quantize_money` runs on monetary/percentage fields even when `clean()` is bypassed (e.g. via `objects.create()`).
+  - **P0 URL Routing Fixes**: Resolved routing in `proofbill/urls.py`, `products/urls.py`, and `subscriptions/urls.py` so `/plans/`, `/customers/`, and `/customers/<uuid>/` are direct top-level endpoints matching `CONTRACT.md` without duplicate mounts.
+  - **P1 Password Reset Flow**: Configured Django's built-in `PasswordResetView`, `PasswordResetDoneView`, `PasswordResetConfirmView`, and `PasswordResetCompleteView` in `accounts/urls.py`. Created graphite-styled templates (`password_reset.html`, `password_reset_done.html`, `password_reset_confirm.html`, `password_reset_complete.html`, `password_reset_email.html`, `password_reset_subject.txt`). Added "Forgot password?" link to login page.
+  - **P2 Customer Self-Registration & User Linkage**: Implemented `CustomerRegistrationForm` with `ProofBillPasswordValidator`, `register_view`, and `templates/accounts/register.html`. Added automatic customer `User` account linkage when staff creates a customer at `/customers/`.
+  - **Validator Fix**: Added `__call__` method to `ProofBillPasswordValidator` so it works seamlessly as both a Django auth password validator and a form field validator.
+  - **Database Migrations**: Applied unapplied migration `analytics.0001_initial`.
+  - **Test Suite**: Added unit/integration tests for customer registration and password reset. Total tests increased to 43, all 43 passing.
+- **Files Modified / Added**:
+  - `backend/products/models.py`, `backend/products/urls.py`, `backend/subscriptions/urls.py`, `backend/subscriptions/views.py`, `backend/proofbill/urls.py`
+  - `backend/accounts/validators.py`, `backend/accounts/forms.py`, `backend/accounts/views.py`, `backend/accounts/urls.py`, `backend/accounts/tests.py`
+  - `backend/templates/base.html`, `backend/templates/accounts/login.html`, `backend/templates/accounts/register.html`
+  - `backend/templates/accounts/password_reset*.html`, `backend/templates/accounts/password_reset_subject.txt`
+  - `backend/TASKS.md`, `.gitignore`
+- **Tests Performed & Results**:
+  - `python manage.py test`: 43/43 tests passed (0 failures, 0 errors)
+  - `python manage.py seed_demo`: Verified successfully seeding complete demo dataset
+  - `python manage.py run_billing`: Confirmed idempotent recurring billing
+  - `python manage.py run_detection`: Confirmed audit detection with deduplicated alerts
+  - `python manage.py leak_injection`: Verified synthetic fault generation and live Proof Engine detection
+
+
 ---
 
 ## Important Changes for Other Agents

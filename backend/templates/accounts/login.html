@@ -32,8 +32,17 @@
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Sign in</button>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 12px; margin-top: -8px;">
+                <a href="{% url 'password_reset' %}" style="font-size: 13px; color: var(--text-secondary);">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 4px;">Sign in</button>
         </form>
+
+        <div style="margin-top: 16px; text-align: center; font-size: 13px;">
+            Don't have an account? <a href="{% url 'register' %}">Register customer account</a>
+        </div>
+
 
         <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary);">
             <strong>Demo Credentials:</strong><br>

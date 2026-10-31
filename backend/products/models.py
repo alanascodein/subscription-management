@@ -47,6 +47,13 @@ class Product(models.Model):
         if self.sales_price is not None:
             self.sales_price = quantize_money(self.sales_price)
 
+    def save(self, *args, **kwargs):
+        if self.cost_price is not None:
+            self.cost_price = quantize_money(self.cost_price)
+        if self.sales_price is not None:
+            self.sales_price = quantize_money(self.sales_price)
+        super().save(*args, **kwargs)
+
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(
@@ -81,6 +88,11 @@ class ProductVariant(models.Model):
         super().clean()
         if self.extra_price is not None:
             self.extra_price = quantize_money(self.extra_price)
+
+    def save(self, *args, **kwargs):
+        if self.extra_price is not None:
+            self.extra_price = quantize_money(self.extra_price)
+        super().save(*args, **kwargs)
 
     @property
     def total_unit_price(self):
@@ -168,6 +180,11 @@ class TaxRule(models.Model):
         if self.rate_percent is not None:
             self.rate_percent = quantize_money(self.rate_percent)
 
+    def save(self, *args, **kwargs):
+        if self.rate_percent is not None:
+            self.rate_percent = quantize_money(self.rate_percent)
+        super().save(*args, **kwargs)
+
 
 class Discount(models.Model):
     code = models.CharField(max_length=50, unique=True)
@@ -212,6 +229,11 @@ class Discount(models.Model):
         if self.discount_type == DiscountType.PERCENT and self.value > Decimal('100.00'):
             from django.core.exceptions import ValidationError
             raise ValidationError({'value': 'Percentage discount cannot exceed 100%'})
+
+    def save(self, *args, **kwargs):
+        if self.value is not None:
+            self.value = quantize_money(self.value)
+        super().save(*args, **kwargs)
 
     @property
     def is_usable(self):

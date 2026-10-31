@@ -79,3 +79,53 @@ class AccountsTestCase(TestCase):
         self.client.force_login(cust1_user)
         dash_resp = self.client.get('/dashboard/')
         self.assertEqual(dash_resp.status_code, 403)
+
+    def test_customer_registration(self):
+        # GET registration page
+        resp = self.client.get('/accounts/register/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Register Customer Account")
+
+        # POST registration with valid data
+        post_data = {
+            'name': 'Alice Smith',
+            'company_name': 'Smith Enterprises',
+            'email': 'alice@smith.com',
+            'phone': '+91 91234 56789',
+            'billing_address': '42 Marine Drive, Kochi',
+            'password': 'SecurePassword123!',
+            'confirm_password': 'SecurePassword123!',
+        }
+        resp = self.client.post('/accounts/register/', post_data)
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, '/portal/')
+
+        # Verify User and Customer exist
+        from subscriptions.models import Customer
+        user = User.objects.get(email='alice@smith.com')
+        self.assertEqual(user.role, UserRole.CUSTOMER)
+        self.assertEqual(user.first_name, 'Alice')
+        self.assertEqual(user.last_name, 'Smith')
+
+        customer = Customer.objects.get(email='alice@smith.com')
+        self.assertEqual(customer.user, user)
+        self.assertEqual(customer.name, 'Alice Smith')
+        self.assertEqual(customer.company_name, 'Smith Enterprises')
+
+    def test_password_reset_flow(self):
+        # 1. GET password reset page
+        resp = self.client.get('/accounts/password-reset/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Reset your password")
+
+        # 2. POST password reset for existing user
+        User.objects.create_user('resetme@example.com', 'OldPassword123!', role=UserRole.CUSTOMER)
+        resp = self.client.post('/accounts/password-reset/', {'email': 'resetme@example.com'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, '/accounts/password-reset/done/')
+
+        # 3. GET password reset done page
+        done_resp = self.client.get('/accounts/password-reset/done/')
+        self.assertEqual(done_resp.status_code, 200)
+        self.assertContains(done_resp, "Check your email")
+

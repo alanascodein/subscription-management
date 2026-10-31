@@ -18,9 +18,25 @@ def customers_list_view(request):
     if request.method == 'POST':
         form = CustomerForm(request.POST)
         if form.is_valid():
-            c = form.save()
+            c = form.save(commit=False)
+            from accounts.models import User
+            email = c.email.strip().lower()
+            user = User.objects.filter(email=email).first()
+            if not user:
+                name_parts = c.name.split(maxsplit=1)
+                first = name_parts[0]
+                last = name_parts[1] if len(name_parts) > 1 else ''
+                user = User.objects.create_user(
+                    email=email,
+                    first_name=first,
+                    last_name=last,
+                    role=UserRole.CUSTOMER,
+                )
+            c.user = user
+            c.save()
             messages.success(request, f"Customer '{c.name}' registered.")
             return redirect('customers')
+
 
     return render(request, 'subscriptions/customer_list.html', {
         'customers': customers,

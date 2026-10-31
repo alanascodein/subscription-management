@@ -36,9 +36,14 @@ media/
 .env.*
 !.env.example
 
-# IDE
+# IDE & AI tooling
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
 .DS_Store
+.gemini/
+.codex/
+.cursor/
+.impeccable/
+

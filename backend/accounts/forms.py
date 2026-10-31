@@ -60,3 +60,94 @@ class StaffCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class CustomerRegistrationForm(forms.Form):
+    name = forms.CharField(
+        max_length=200,
+        label="Full Name",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Jane Doe'})
+    )
+    company_name = forms.CharField(
+        max_length=200,
+        required=False,
+        label="Company Name (Optional)",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Acme Corp'})
+    )
+    email = forms.EmailField(
+        label="Email Address",
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'jane@example.com'})
+    )
+    phone = forms.CharField(
+        max_length=50,
+        required=False,
+        label="Phone Number (Optional)",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+91 98765 43210'})
+    )
+    billing_address = forms.CharField(
+        required=False,
+        label="Billing Address (Optional)",
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Street, City, Postal Code'})
+    )
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'At least 9 characters'}),
+        validators=[ProofBillPasswordValidator()]
+    )
+    confirm_password = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Re-enter your password'})
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Passwords do not match.")
+        return cleaned_data
+
+    def save(self):
+        from subscriptions.models import Customer
+        email = self.cleaned_data['email'].strip().lower()
+        password = self.cleaned_data['password']
+        name = self.cleaned_data['name'].strip()
+        company_name = self.cleaned_data.get('company_name', '').strip()
+        phone = self.cleaned_data.get('phone', '').strip()
+        billing_address = self.cleaned_data.get('billing_address', '').strip()
+
+        name_parts = name.split(maxsplit=1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        user = User.objects.create_user(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role=UserRole.CUSTOMER,
+        )
+
+        customer, created = Customer.objects.get_or_create(
+            email=email,
+            defaults={
+                'user': user,
+                'name': name,
+                'company_name': company_name,
+                'phone': phone,
+                'billing_address': billing_address,
+            }
+        )
+        if not created and not customer.user:
+            customer.user = user
+            customer.save()
+
+        return user
+

@@ -13,5 +13,10 @@
 | TASK-09 | Proof Engine & Alerts (`audit`): Detection rules, Revenue at Risk, one-click fixes | Backend | Completed | Missed, overdue, duplicate, anomaly, renewal rules; deduplication; guarded fixes. |
 | TASK-10 | Analytics service: `analytics.summary()` database aggregations | Backend | Completed | Real SQL/ORM aggregation for MRR, active count, collected, overdue, revenue at risk. |
 | TASK-11 | Management commands: `run_billing`, `run_detection`, `seed_demo`, `leak_injection` | Backend | Completed | CLI tools for batch billing, audit detection, demo dataset seeding, and fault injection. |
-| TASK-12 | Backend test suite: unit and integration tests | Backend | Completed | 18 automated tests passing: pricing test (Rs. 4,966.97), lifecycle, billing idempotency, catch-up, payments, overpayments, roles, scoping. |
+| TASK-12 | Backend test suite: unit and integration tests | Backend | Completed | 43 automated tests passing: pricing test (Rs. 4,966.97), model quantization, lifecycle, billing idempotency, catch-up, payments, overpayments, roles, scoping, customer registration, password reset. |
 | TASK-13 | UI Templates and Offline Stylesheet | Backend / Fullstack | Completed | Server-rendered templates following graphite palette and typographic design system without CDN dependencies. |
+| TASK-14 | Fix model quantization on save (`products/models.py`) | Backend | Completed | Added `save()` overrides for Product, ProductVariant, and TaxRule so monetary values are quantized even when `clean()` is bypassed. |
+| TASK-15 | Fix URL routing for plans and customers (`proofbill/urls.py`) | Backend | Completed | Established direct top-level routes for `/plans/` and `/customers/` without double mounts. |
+| TASK-16 | Password reset flow (`accounts`) | Integration / Backend | Completed | Wired up Django's built-in password reset views with console email backend, and templates adhering to graphite design. |
+| TASK-17 | Customer self-registration flow (`accounts`, `subscriptions`) | Integration / Backend | Completed | Built `CustomerRegistrationForm`, `register_view`, template, and automatic customer User creation on staff registration. |
+

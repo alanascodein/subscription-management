@@ -13,7 +13,11 @@ class ProofBillPasswordValidator:
     def __init__(self, min_length=9):
         self.min_length = min_length
 
+    def __call__(self, password):
+        return self.validate(password)
+
     def validate(self, password, user=None):
+
         if len(password) < self.min_length:
             raise ValidationError(
                 _(f"This password must contain at least {self.min_length} characters."),

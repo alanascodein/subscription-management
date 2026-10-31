@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib import messages
-from accounts.forms import EmailAuthenticationForm, StaffCreationForm
+from accounts.forms import EmailAuthenticationForm, StaffCreationForm, CustomerRegistrationForm
 from accounts.permissions import admin_required
 from core.constants import UserRole
 
@@ -48,3 +48,23 @@ def create_staff_view(request):
         form = StaffCreationForm()
 
     return render(request, 'accounts/create_staff.html', {'form': form})
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        if request.user.role == UserRole.CUSTOMER:
+            return redirect('portal_home')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = CustomerRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f"Welcome to ProofBill, {user.first_name or user.email}! Your customer portal is ready.")
+            return redirect('portal_home')
+    else:
+        form = CustomerRegistrationForm()
+
+    return render(request, 'accounts/register.html', {'form': form})
+
